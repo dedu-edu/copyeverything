@@ -1,0 +1,46 @@
+table, td, tr {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 4px;
+}
+
+.th-rotate {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 4px;
+  text-wrap: wrap !important;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  height: 100%;
+  max-height: -moz-min-content;
+  max-height: min-content;
+}
+
+.th-rotate-border {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-right: 0;
+  padding: 4px;
+  text-wrap: wrap !important;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  height: 100%;
+  max-height: -moz-min-content;
+  max-height: min-content;
+}
+
+.subheaderbold {
+  font-weight: 900;
+}
+
+.dark-layout table, .dark-layout td, .dark-layout tr, .dark-layout th {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.535);
+}
+.dark-layout .th-rotate {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px;
+}
+.dark-layout .th-rotate-border {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 0;
+}/*# sourceMappingURL=style.css.map */

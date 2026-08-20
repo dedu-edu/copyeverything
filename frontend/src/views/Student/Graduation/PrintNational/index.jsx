@@ -1,0 +1,203 @@
+
+import React, { useState, useEffect } from 'react'
+
+import useApi from '@hooks/useApi';
+import useLoader from '@hooks/useLoader';
+
+import './style.css'
+
+export default function PrintNational() {
+    const data = JSON.parse(localStorage.getItem('blankDatas'))
+    const lesson_year = data?.lesson_year
+
+    // Loader
+    const { fetchData, Loader, isLoading } = useLoader({})
+
+    // API
+    const signatureApi = useApi().signature
+
+    // State
+    const [listArr, setListArr] = useState([])
+
+    async function getAllData() {
+        // Сургуулийн нэгдсэн нэг захирал гарын үсэг зурах учраас data?.student?.group?.profession?.school
+        await Promise.all([
+            fetchData(signatureApi.get(2, `${lesson_year ? lesson_year : ''}`)),
+        ]).then((values) => {
+            setListArr(values[0]?.data)
+        })
+    }
+
+    const professionCode = data?.student?.group?.profession?.code || ''
+
+    const isEconomicSecurity = professionCode === '103905' || professionCode === '10380103'
+
+    const filteredArr = isEconomicSecurity
+        ? listArr
+        : listArr.filter(val => !val?.economic_security)
+
+    useEffect(
+        () => {
+            getAllData()
+
+            // window.onafterprint = function()
+            // {
+            //     window.close()
+            // }
+        },
+        []
+    )
+
+    useEffect(
+        () => {
+            if (data && listArr.length != 0) {
+                document.title = `${data?.student?.full_name}-нүүр-уйгаржин`
+            }
+        },
+        [data, listArr]
+    )
+
+    useEffect(
+        () => {
+            if (data && listArr.length != 0) {
+
+                let highest = 0
+
+                for (let data of document.getElementsByClassName('signature_national')) {
+                    if (highest < data.getBoundingClientRect().height) {
+                        highest = data.getBoundingClientRect().height
+                    }
+                }
+
+                for (let data of document.getElementsByClassName('signature_national')) {
+                    data.style.height = `${highest}px`
+                }
+            }
+        },
+        [data, listArr]
+    )
+
+    function tooBichih(too) {
+        return (<span style={{ fontFamily: 'CMSUB', fontSize: '25px' }}>{too}</span>)
+    }
+
+    function tushaal(text) {
+        var datas = []
+        if (text?.includes(',')) {
+            var texts = text?.split(',')
+            texts?.map((c) => {
+                {
+                    let slash = c?.split('/')
+                    datas.push(slash[1])
+                }
+            })
+
+            return <span>
+                <span> ᠠ‍ /</span><span style={{ fontFamily: 'CMSUB', fontSize: '25px' }}>{datas[0]}</span>,
+                <span> ᠠ‍ /</span><span style={{ fontFamily: 'CMSUB', fontSize: '25px' }}>{datas[1]}</span>
+            </span>
+
+        } else {
+            let slash = text?.split('/')
+            return <span><span> ᠠ‍ /</span><span style={{ fontFamily: 'CMSUB', fontSize: '25px' }}>{slash?.length > 0 ? slash[1] : text}</span></span>
+        }
+    }
+
+    function dugeerUg(too) {
+        switch (too) {
+            case '0' || 0:
+                return 'ᠳ᠋ᠤᠭᠠᠷ'
+            case '1' || 1:
+                return 'ᠳ᠋ᠦ᠋ᢉᠡᠷ'
+            case '2' || 2:
+                return 'ᠳ᠋ᠤᠭᠠᠷ'
+            case '3' || 3:
+                return 'ᠳ᠋ᠤᠭᠠᠷ'
+            case '4' || 4:
+                return 'ᠳ᠋ᠦ᠋ᢉᠡᠷ'
+            case '5' || 5:
+                return 'ᠳ᠋ᠤᠭᠠᠷ'
+            case '6' || 6:
+                return 'ᠳ᠋ᠤᠭᠠᠷ'
+            case '7' || 7:
+                return 'ᠳ᠋ᠤᠭᠠᠷ'
+            case '8' || 8:
+                return 'ᠳ᠋ᠤᠭᠠᠷ'
+            case '9' || 9:
+                return 'ᠳ᠋ᠦ᠋ᢉᠡᠷ'
+            default:
+                break;
+        }
+    }
+    // <span style={{ fontFamily: 'CMSUB', fontSize: '25px' }}>{data?.student?.group?.join_year?.substring(0, 4)} - {data?.lesson_year?.substring(5, 9)}</span> ᠣᠨ ᠳ᠋ᠤ
+
+    return (
+        <div className='vh-100 position-relative bg-white' style={{ fontFamily: 'mongolianScript', fontSize: '16px', padding: '120px 120px 95px 260px' }}>
+            {isLoading && Loader}
+
+            <div className='d-flex justify-content-between h-100 ms-3' >
+                <div className='d-flex'>
+                    <div className='text-center' style={{ writingMode: 'vertical-lr', marginLeft: '2px' }} >
+                        ᠳ᠋ᠤᠭᠠᠷ {tooBichih(data?.diplom_num)}
+                    </div>
+                    <div style={{ writingMode: 'vertical-lr', marginLeft: '40px', lineHeight: '48px', maxHeight: '96%' }} >
+                        ᠮᠣᠩᠭᠣᠯ ᠤᠯᠤᠰ ᠤ᠋ᠨ ᠢᠷᢉᠡᠨ {data?.student?.last_name_uig} ᠣᠪᠤᠭᠲᠠᠢ {data?.student?.first_name_uig} ᠨᠢ
+                        <br />
+                        {data?.student?.group?.profession?.name_uig} {tooBichih(data?.student?.group?.profession?.code)} {data?.student?.group?.profession?.is_together ? 'ᠬᠠᠮᠲᠤᠷᠠᠭᠰᠠᠨ ' : ''} ᢈᠥᠲᠦᠯᠪᠦᠷᠢ ᠪᠡᠷ ᠰᠤᠷᠤᠯᠴᠠᠨ ᠲᠡᢉᠦᠰᠦᢉᠰᠡᠨ ᠲᠤᠯᠠ ᠶᠡᢈᠡ ᠰᠤᠷᠭᠠᠭᠤᠯᠢ ᠶ᠋ᠢᠨ ᠵᠠᢈᠢᠷᠤᠯ ᠤ᠋ᠨ {tooBichih(data?.decision_date?.substring(0, 4))} ᠣᠨ ᠤ᠋ {tooBichih(data?.decision_date?.substring(5, 7))} {dugeerUg(data?.decision_date?.substring(5, 7) && data?.decision_date?.substring(5, 7).charAt(data?.decision_date?.substring(5, 7).length - 1))} ᠰᠠᠷ᠎ᠠ ᠶ᠋ᠢᠨ {tooBichih(data?.decision_date?.substring(8, 10))}{tooBichih('-')} ᠤ᠋
+                        ᠡᠳᠦᠷ ᠦ᠋ᠨ <span style={{ textWrap: 'nowrap' }}>{tushaal(data?.graduation_number)} {dugeerUg(data?.graduation_number && data?.graduation_number.charAt(data?.graduation_number.length - 1))}</span> ᠲᠤᠰᠢᠶᠠᠯ ᠢ᠋ᠶᠠᠷ {data?.student?.group?.profession?.dep_name_uig} <span className='fs-3'>{data?.student?.group?.degree?.degree_uig_name}</span> ᠤ᠋ᠨ ᠵᠡᠷᢉᠡ ᠣᠯᠭᠤᠪᠠ᠃
+                    </div>
+                </div>
+                <div className='d-flex' style={{ fontSize: '14px', lineHeight: '42px' }}>
+                    {
+                        filteredArr.map((val, idx) => {
+                            if (!isEconomicSecurity && !(data?.student?.group?.profession?.is_together === true || data?.student?.group?.profession?.is_together === 'true') && idx == 1) {
+                                return
+                            } else {
+                                return (
+                                    <div
+                                        className='d-flex flex-justify-content-between align-items-end'
+                                        style={{
+                                            writingMode: 'vertical-lr',
+                                            gap: '10px',
+                                        }}
+                                        key={idx}
+                                    >
+                                        <span>
+                                            {val?.position_name_uig
+                                                ?.split('ᠳ᠋ᠣᠻᠲ᠋ᠣᠷ')
+                                                ?.map((part, index, arr) => (
+                                                    <React.Fragment key={index}>
+                                                        {part}
+                                                        {index !== arr.length - 1 && (
+                                                            <>
+                                                                <br />
+                                                                ᠳ᠋ᠣᠻᠲ᠋ᠣᠷ
+                                                            </>
+                                                        )}
+                                                    </React.Fragment>
+                                                ))}
+                                        </span>
+
+                                        <span
+                                            className='signature_national'
+                                            style={{
+                                                textWrap: 'nowrap',
+                                                marginTop: 'auto'
+                                            }}
+                                        >
+                                            {val?.last_name_uig} {val?.first_name_uig}
+                                        </span>
+                                    </div>
+                                )
+                            }
+                        })
+                    }
+                    <div className='d-flex justify-content-between' style={{ writingMode: 'vertical-rl', paddingTop: '20px', paddingBottom: '30px', paddingLeft: '30px' }} >
+                        <span>ᠤᠯᠠᠭᠠᠨᠪᠠᠭᠠᠲᠤᠷ ᠬᠣᠲᠠ</span>
+                        <span>ᠪᠦᠷᠢᠳᢈᠡᠯ ᠦ᠋ᠨ ᠳ᠋ᠤᠭᠠᠷ <span style={{ fontFamily: 'CMSUB', fontSize: '20px' }}>{data?.registration_num}</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}

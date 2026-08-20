@@ -1,0 +1,154 @@
+.fallback-spinnerf {
+  height: 100%;
+}
+.fallback-spinnerf.app-loaderf {
+  flex-direction: column;
+}
+.fallback-spinnerf.app-loaderf .loadingf {
+  margin-top: 1rem;
+}
+.fallback-spinnerf .loadingf {
+  width: 200px;
+  height: 200px;
+}
+.fallback-spinnerf .loadingf .effect-1f,
+.fallback-spinnerf .loadingf .effect-2f,
+.fallback-spinnerf .loadingf .effect-3f {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-left: 2px solid rgb(2, 0, 131);
+  box-sizing: border-box;
+}
+.fallback-spinnerf .loadingf .effect-1f {
+  position: absolute;
+  animation: rotate 1s ease infinite;
+}
+.fallback-spinnerf .loadingf .effect-2f {
+  position: absolute;
+  animation: rotateOpacity 1s ease infinite 0.1s;
+}
+.fallback-spinnerf .loadingf .effect-3f {
+  animation: rotateOpacity 1s ease infinite 0.2s;
+}
+.fallback-spinnerf .loadingf .loadingf .effectsf {
+  transition: all 0.3s ease;
+}
+
+.fallback-logof {
+  width: 100px;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(1turn);
+  }
+}
+@keyframes rotateOpacity {
+  0% {
+    transform: rotate(0deg);
+    opacity: 0.1;
+  }
+  100% {
+    transform: rotate(1turn);
+    opacity: 1;
+  }
+}
+.background-glassf {
+  z-index: 9999;
+  -webkit-backdrop-filter: blur(5px);
+          backdrop-filter: blur(5px);
+  background-color: rgba(255, 255, 255, 0.1);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.background-lightf {
+  z-index: 10000;
+}
+
+.dark-layout .fallback-spinnerf .loadingf .effect-1f,
+.dark-layout .fallback-spinnerf .loadingf .effect-2f,
+.dark-layout .fallback-spinnerf .loadingf .effect-3f {
+  border-left: 3px solid rgb(239, 239, 239);
+}
+
+@media only screen and (max-width: 500px) {
+  .fallback-spinnerf {
+    height: 100%;
+  }
+  .fallback-spinnerf.app-loaderf {
+    flex-direction: column;
+  }
+  .fallback-spinnerf.app-loaderf .loadingf {
+    margin-top: 1rem;
+  }
+  .fallback-spinnerf .loadingf {
+    width: 75px;
+    height: 75px;
+  }
+  .fallback-spinnerf .loadingf .effect-1f,
+  .fallback-spinnerf .loadingf .effect-2f,
+  .fallback-spinnerf .loadingf .effect-3f {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+  }
+  .fallback-spinnerf .loadingf .effect-1f {
+    position: absolute;
+    animation: rotate 1s ease infinite;
+  }
+  .fallback-spinnerf .loadingf .effect-2f {
+    position: absolute;
+    animation: rotateOpacity 1s ease infinite 0.1s;
+  }
+  .fallback-spinnerf .loadingf .effect-3f {
+    animation: rotateOpacity 1s ease infinite 0.2s;
+  }
+  .fallback-spinnerf .loadingf .loadingf .effectsf {
+    transition: all 0.3s ease;
+  }
+  .fallback-logof {
+    margin-top: 15px;
+    width: 50px;
+  }
+  @keyframes rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(1turn);
+    }
+  }
+  @keyframes rotateOpacity {
+    0% {
+      transform: rotate(0deg);
+      opacity: 0.1;
+    }
+    100% {
+      transform: rotate(1turn);
+      opacity: 1;
+    }
+  }
+  .background-glassf {
+    z-index: 9999;
+    -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+    background-color: rgba(255, 255, 255, 0.1);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+  .background-lightf {
+    z-index: 10000;
+  }
+}/*# sourceMappingURL=fstyle.css.map */

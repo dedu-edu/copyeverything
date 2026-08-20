@@ -1,0 +1,449 @@
+import { useState, Fragment, useEffect } from 'react';
+import { useForm, Controller } from "react-hook-form";
+import { convertDefaultValue, ReactSelectStyles, validate } from "@utils";
+import { validateSchema } from "../Add/Steps/General/validationSchema"
+import { t } from 'i18next';
+
+import {
+	Modal,
+	ModalHeader,
+	ModalBody,
+    Row,
+    Form,
+    Col,
+    Label,
+    Input,
+    Button,
+    FormFeedback,
+} from "reactstrap";
+
+import Select from 'react-select';
+import useApi from '@hooks/useApi';
+import useLoader from '@hooks/useLoader';
+import '@styles/react/libs/flatpickr/flatpickr.scss';
+
+const EditModal = ({ open, handleModal, refreshDatas, editData }) => {
+    const [lessonOption, setLessonOption] = useState([])
+    const [surveyOption, setSurveyOption] = useState([])
+    const { control, handleSubmit, setError, setValue, watch, formState: { errors } } = useForm(validate(validateSchema))
+	const { fetchData } = useLoader({ isFullScreen: true });
+
+    // const [endPicker, setEndPicker] = useState(new Date(editData?.end_date))
+	// const [startPicker, setStartPicker] = useState(new Date(editData?.start_date))
+
+    const challengeAPI = useApi().challenge
+    const teacherLessonApi = useApi().study.lesson
+    const surveyApi = useApi().survey
+
+    async function getLesson()
+    {
+        const { success, data } = await fetchData(teacherLessonApi.getChallenge())
+        if(success) {
+            setLessonOption(data)
+        }
+    }
+
+    useEffect(() => {
+        if(editData && Object.keys(editData).length > 0) {
+            for(let key in editData) {
+                if (editData[key] !== null && editData[key] !== undefined) {
+                    setValue(key, editData[key])
+                } else {
+                    setValue(key, '')
+                }
+                if (key === 'lesson') {
+                    setValue(key, editData[key]?.id || '');
+                }
+            }
+        }
+	}, [editData]);
+
+    useEffect(
+        () =>
+        {
+            getLesson()
+            getSurvey()
+        },
+        []
+    )
+
+    async function onSubmit(cdata) {
+        cdata = convertDefaultValue(cdata)
+
+        if(!cdata?.is_repeat) {
+            cdata['max_score'] = 30
+        }
+
+        const { success, errors } = await fetchData(challengeAPI.putSelectedTest(cdata, editData?.id))
+        if(success) {
+            handleModal()
+            refreshDatas()
+        }
+        else {
+            /** Алдааны мессэжийг input дээр харуулна */
+            for (let key in errors) {
+                setError(key, { type: 'custom', message: errors[key]?.[0]});
+            }
+        }
+	}
+
+    async function getSurvey()
+    {
+        const { success, data } = await fetchData(surveyApi.get(10000, 1 ))
+        if(success) {
+            setSurveyOption(data?.results)
+        }
+    }
+
+    return (
+        <Fragment>
+            <Modal
+                isOpen={open}
+                toggle={handleModal}
+                className="modal-dialog-centered modal-lg"
+                contentClassName="pt-0"
+                fade={true}
+                backdrop='static'
+            >
+                <ModalHeader toggle={handleModal}  className='bg-transparent pb-0' cssModule={{'modal-title': 'w-100 text-center'}}>
+                    <h4>{t('Шалгалт засах')}</h4>
+                </ModalHeader>
+                <ModalBody className="flex-grow-50 mb-3 t-0">
+                    <Row tag={Form} onSubmit={handleSubmit(onSubmit)}>
+                        <Col md={12}>
+                            <Label className="form-label" for="title">
+                                {t('Гарчиг')}
+                            </Label>
+                            <Controller
+                                defaultValue=''
+                                control={control}
+                                id="title"
+                                name="title"
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        id="title"
+                                        bsSize="sm"
+                                        placeholder={editData?.title}
+                                        type="text"
+                                        invalid={errors.title && true}
+                                    />
+                                )}
+                            />
+                            {errors.title && <FormFeedback className='d-block'>{t(errors.title.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={12} className='mt-50'>
+                            <Label className="form-label" for="description">
+                                {t('Тайлбар')}
+                            </Label>
+                            <Controller
+                                defaultValue={''}
+                                control={control}
+                                id="description"
+                                name="description"
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        id="description"
+                                        bsSize="sm"
+                                        placeholder={editData?.description}
+                                        type="textarea"
+                                        invalid={errors.description && true}
+                                        rows={'5'}
+                                    />
+                                )}
+                            />
+                            {errors.description && <FormFeedback className='d-block'>{t(errors.description.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={6} className='mt-50'>
+                            <Label className="form-label" for="lesson">
+                                {t('Хичээл')} (Тухайн жилийн дүн оруулсан хичээлийн жагсаалт)
+                            </Label>
+                            <Controller
+                                control={control}
+                                defaultValue=''
+                                name="lesson"
+                                render={({ field: { value, onChange} }) => {
+                                    return (
+                                        <Select
+                                            id="lesson"
+                                            name="lesson"
+                                            isClearable
+                                            classNamePrefix='select'
+                                            className='react-select'
+                                            placeholder={t(`-- Сонгоно уу --`)}
+                                            value={lessonOption.find((c) => c.id === value)}
+                                            options={lessonOption || []}
+                                            noOptionsMessage={() => 'Хоосон байна'}
+                                            onChange={(val) => {
+                                                onChange(val?.id || '')
+                                            }}
+                                            styles={ReactSelectStyles}
+                                            getOptionValue={(option) => option.id}
+                                            getOptionLabel={(option) => option.code + ' ' + option.name}
+                                        />
+                                    )
+                                }}
+                            ></Controller>
+                            {errors.lesson && <FormFeedback className='d-block'>{t(errors.lesson.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={6}>
+                        <Label className="form-label" for="survey">
+                            {t('Сэтгэл ханамжийн судалгаа')}
+                        </Label>
+                        <Controller
+                            control={control}
+                            defaultValue=''
+                            name="survey"
+                            render={({ field: { value, onChange} }) => {
+                                return (
+                                    <Select
+                                        id="survey"
+                                        name="survey"
+                                        isClearable
+                                        classNamePrefix='select'
+                                        className='react-select'
+                                        placeholder={t(`-- Сонгоно уу --`)}
+                                        value={surveyOption?.find((c) => c.id === value)}
+                                        options={surveyOption || []}
+                                        noOptionsMessage={() => 'Хоосон байна'}
+                                        onChange={(val) => {
+                                            onChange(val?.id || '')
+                                        }}
+                                        styles={ReactSelectStyles}
+                                        getOptionValue={(option) => option.id}
+                                        getOptionLabel={(option) => option?.title}
+                                    />
+                                )
+                            }}
+                        ></Controller>
+                        {errors.survey && <FormFeedback className='d-block'>{t(errors.survey.message)}</FormFeedback>}
+                    </Col>
+                        <Col md={6} className='mt-50'>
+                            <Label className="form-label" for="duration">
+                                {t('Үргэлжлэх хугацаа (минутаар)')}
+                            </Label>
+                            <Controller
+                                defaultValue=''
+                                control={control}
+                                id="duration"
+                                name="duration"
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        id ="duration"
+                                        bsSize="sm"
+                                        placeholder={'Үргэлжлэх хугацаа (минутаар)'}
+                                        type="number"
+                                        invalid={errors.duration && true}
+                                    />
+                                )}
+                            />
+                            {errors.duration && <FormFeedback className='d-block'>{t(errors.duration.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={6} className='mt-50'>
+                            <Label className="form-label" for="start_date">
+                                {t('Эхлэх хугацаа')}
+                            </Label>
+                            <Controller
+                                defaultValue=''
+                                control={control}
+                                name="start_date"
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        id={field.name}
+                                        bsSize="sm"
+                                        placeholder={t('Эхлэх хугацаа')}
+                                        type="datetime-local"
+                                        invalid={errors[field.name] && true}
+                                    />
+                                )}
+                            />
+                            {errors.start_date && <FormFeedback className='d-block'>{t(errors.start_date.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={6} className='mt-50'>
+                            <Label className="form-label" for="end_date">
+                                {t('Дуусах хугацаа')}
+                            </Label>
+                            <Controller
+                                defaultValue=''
+                                control={control}
+                                name="end_date"
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        id={field.name}
+                                        bsSize="sm"
+                                        placeholder={t('Дуусах хугацаа')}
+                                        type="datetime-local"
+                                        invalid={errors[field.name] && true}
+                                    />
+                                )}
+                            />
+                            {errors.end_date && <FormFeedback className='d-block'>{t(errors.end_date.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={6} className='mt-50'>
+                            <Label className="form-label" for="question_count">
+                                {t('Асуултын тоо')}
+                            </Label>
+                            <Controller
+                                defaultValue=''
+                                control={control}
+                                id="question_count"
+                                name="question_count"
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        id ="question_count"
+                                        bsSize="sm"
+                                        placeholder={'Асуултын тоо'}
+                                        type="number"
+                                        invalid={errors.question_count && true}
+                                    />
+                                )}
+                            />
+                            {errors.question_count && <FormFeedback className='d-block'>{t(errors.question_count.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={6} className='mt-50'>
+                            <Label className="form-label" for="try_number">
+                                {t('Оролдлогын тоо')}
+                            </Label>
+                            <Controller
+                                defaultValue=''
+                                control={control}
+                                name="try_number"
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        id={field.name}
+                                        bsSize="sm"
+                                        placeholder={'Оролдлогын тоо'}
+                                        type="number"
+                                        invalid={errors[field.name] && true}
+                                    />
+                                )}
+                            />
+                            {errors.try_number && <FormFeedback className='d-block'>{t(errors.try_number.message)}</FormFeedback>}
+                        </Col>
+                        {
+                            watch('is_repeat') &&
+                            <Col md={6} className='mt-50'>
+                                <Label className="form-label" for="max_score">
+                                    {t('Авах дээд оноо')}
+                                </Label>
+                                <Controller
+                                    control={control}
+                                    name="max_score"
+                                    defaultValue={30}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            bsSize="sm"
+                                            type="number"
+                                            min={0}
+                                            max={30}
+                                            step={1}
+                                            placeholder="Авах дээд оноо"
+                                            onKeyDown={(e) => {
+                                                if (
+                                                    ['e', 'E', '+', '-', '.'].includes(e.key)
+                                                ) {
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+
+                                                if (value === '') {
+                                                    field.onChange('');
+                                                    return;
+                                                }
+
+                                                const num = parseInt(value, 10);
+
+                                                if (!isNaN(num) && num >= 0 && num <= 30) {
+                                                    field.onChange(num);
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                />
+                                {errors.max_score && <FormFeedback className='d-block'>{t(errors.max_score.message)}</FormFeedback>}
+                            </Col>
+                        }
+                        <Col md={12} className='mt-50'>
+                            <Controller
+                                control={control}
+                                name="is_open"
+                                defaultValue={false}
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        id={field.name}
+                                        type="checkbox"
+                                        checked={field.value}
+                                        className='me-50'
+                                    />
+                                )}
+                            />
+                            <Label className="form-label" for="is_open">
+                                {t('Нээлттэй эсэх')}
+                            </Label>
+                            {errors.is_open && <FormFeedback className='d-block'>{t(errors.is_open.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={12} className='mt-50'>
+                            <Controller
+                                control={control}
+                                name="is_repeat"
+                                defaultValue={false}
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        id={field.name}
+                                        type="checkbox"
+                                        checked={field.value}
+                                        className='me-50'
+                                    />
+                                )}
+                            />
+                            <Label className="form-label" for="is_repeat">
+                                {t('Давтан эсэх')}
+                            </Label>
+                            {errors.is_repeat && <FormFeedback className='d-block'>{t(errors.is_repeat.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={12} className='mt-50'>
+                            <Controller
+                                control={control}
+                                name="has_shuffle"
+                                defaultValue={false}
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        id={field.name}
+                                        type="checkbox"
+                                        checked={field.value}
+                                        className='me-50'
+                                    />
+                                )}
+                            />
+                            <Label className="form-label" for="has_shuffle">
+                                {t('Шалгалтын асуултыг оюутан бүрээр холих эсэх')}
+                            </Label>
+                            {errors.has_shuffle && <FormFeedback className='d-block'>{t(errors.has_shuffle.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={12} className="text-center mt-2">
+                            <Button className='me-2' color="primary" type="submit">
+                                {t('Хадгалах')}
+                            </Button>
+                            <Button color="secondary" outline type="reset" onClick={handleModal}>
+                                {t('Буцах')}
+                            </Button>
+                        </Col>
+                    </Row>
+                </ModalBody>
+            </Modal>
+        </Fragment>
+    )
+}
+export default EditModal

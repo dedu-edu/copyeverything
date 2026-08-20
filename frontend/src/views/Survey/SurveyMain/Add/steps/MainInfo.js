@@ -1,0 +1,308 @@
+import { t } from "i18next"
+import React, { Fragment, useState, useEffect, useRef } from 'react'
+
+// editor imports
+import ReactQuill from 'react-quill';
+import 'quill/dist/quill.snow.css'
+
+import { useForm, Controller } from "react-hook-form";
+import { formatDate, validate } from "@utils"
+import { ChevronLeft, ChevronRight, X } from "react-feather"
+import * as Yup from 'yup'
+
+import Flatpickr from 'react-flatpickr'
+// flatpickr style
+import '@styles/react/libs/flatpickr/flatpickr.scss'
+
+import {
+    Row,
+    Col,
+	Form,
+    Input,
+	Label,
+    Button,
+    FormFeedback
+} from "reactstrap";
+
+import "../style.css"
+
+const validateSchema = Yup.object().shape({
+	title: Yup.string()
+        .trim()
+        .required('Хоосон байна.'),
+    description: Yup.string()
+        .trim()
+        .required('Хоосон байна.'),
+})
+
+const submitFieldsFromParent = [
+    'title',
+    'start_date',
+    'end_date',
+]
+
+const submitFieldsFromGeneral = [
+    'description',
+    'is_required',
+    'is_hide_employees',
+]
+
+const MainInfo = ({ stepper, setSubmitDatas, data, editData, editDataGeneral }) => {
+
+    const { control, handleSubmit, setError, clearErrors, setValue, formState: { errors } } = useForm(validate(validateSchema));
+
+    const [endPicker, setEndPicker] = useState(new Date(editData?.end_date))
+	const [startPicker, setStartPicker] = useState(new Date(editData?.start_date))
+
+    function handlePreButton(){
+        stepper.previous()
+    }
+
+	const onSubmit = (cdatas) => {
+        let isCancel = false
+
+        if (isNaN(startPicker)) {
+            setError('start_date', {type: 'custom ', message:'Хоосон байна'})
+            isCancel = true
+        }
+
+        if (isNaN(endPicker)) {
+            setError('end_date', {type: 'custom ', message:'Хоосон байна'})
+            isCancel = true
+        }
+
+        if (isCancel) return
+
+        cdatas['start_date'] = formatDate(startPicker, 'YYYY-MM-DD HH:mm:ss')
+        cdatas['end_date'] = formatDate(endPicker, 'YYYY-MM-DD HH:mm:ss')
+		setSubmitDatas({ ...data, ...cdatas})
+        stepper.next()
+	}
+
+    const handleEndDate = (date) => {
+		var end_date = new Date(date)
+
+		if (!startPicker) {
+			setError('start_date', {type: 'custom ', message:'Хоосон байна'})
+		} else {
+			if (end_date < startPicker) {
+				setError('end_date', {type: 'custom ', message:'Эхлэх хугацаанаас өмнө байх боломжгүй'})
+			} else {
+				setEndPicker(end_date)
+				clearErrors('start_date')
+				clearErrors('end_date')
+			}
+		}
+	}
+
+    useEffect(
+        () => {
+            for (const key of submitFieldsFromParent) {
+                if (editData && Object.prototype.hasOwnProperty.call(editData, key)) {
+                    const value = editData[key]
+
+                    if (![null, undefined].includes(value)) {
+                        if (key === 'start_date') setStartPicker(new Date(value))
+                        if (key === 'end_date') setEndPicker(new Date(value))
+                        setValue(key, value)
+                    }
+                }
+            }
+
+            for (const key of submitFieldsFromGeneral) {
+                const notEmptyEditData = editDataGeneral || editData
+
+                if (notEmptyEditData && Object.prototype.hasOwnProperty.call(notEmptyEditData, key)) {
+                    const value = notEmptyEditData[key]
+
+                    if (![null, undefined].includes(value)) {
+                        setValue(key, value)
+                    }
+                }
+            }
+        },
+        [editData, editDataGeneral]
+    )
+
+    // #region editor code
+    const quillRef = useRef(null);
+
+    const modules = {
+        toolbar: [
+            [{ 'font': [] }, { 'size': ['small', 'medium', 'large', 'huge'] }],
+            [{ 'header': '1' }, { 'header': '2' }, { 'font': [] }],
+            [{ 'align': [] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'indent': '-1' }, { 'indent': '+1' }],
+            ['link'],
+            [{ color: [] }, { background: [] }],
+            ['blockquote'],
+            //   ['image'],
+            ['clean']
+        ],
+    };
+
+    const formats = [
+        'header', 'bold', 'italic', 'underline', 'strike',
+        'align', 'list', 'indent',
+        'size', 'link',
+        // 'image',
+        'color', 'background',
+        'clean'
+    ];
+    // #endregion
+
+   return (
+        <Fragment>
+            <Row tag={Form} onSubmit={handleSubmit(onSubmit)}>
+                <Row>
+                    <Col md={6}>
+                        <Label className="form-label" for="title">
+                            {t('Судалгааны нэр')}
+                        </Label>
+                        <Controller
+                            defaultValue={''}
+                            control={control}
+                            id="title"
+                            name="title"
+                            render={({ field }) => (
+                                <Input
+                                    type='text'
+                                    name='title'
+                                    id='title'
+                                    bsSize='sm'
+                                    {...field}
+                                    placeholder={t('Нэр')}
+                                    invalid={errors.title && true}
+                                />
+                            )}
+                        />
+                        {errors.title && <FormFeedback className='d-block'>{t(errors.title.message)}</FormFeedback>}
+                    </Col>
+                    <Col md={6}>
+                        <Label className="form-label" for="description">
+                            {t('Тайлбар')}
+                        </Label>
+                        <Controller
+                            defaultValue={''}
+                            control={control}
+                            id="description"
+                            name="description"
+                            render={({ field }) => (
+                                <ReactQuill
+                                    {...field}
+                                    id={field.name}
+                                    ref={quillRef}
+                                    placeholder={t('Тайлбар')}
+                                    modules={modules}
+                                    formats={formats}
+                                    theme="snow"
+                                    className='custom-quill'
+                                />
+                            )}
+                        />
+                        {errors.description && <FormFeedback className='d-block'>{t(errors.description.message)}</FormFeedback>}
+                    </Col>
+                    <Col md={6}>
+                        <Label className="form-label" for="start_date">
+                            {t('Эхлэх хугацаа')}
+                        </Label>
+                        <Flatpickr
+                            required
+                            id='start_date'
+                            name='start_date'
+                            className={'form-control'}
+                            onChange={date => {setStartPicker(date[0]), clearErrors('start_date')}}
+                            value={startPicker}
+                            style={{height: "30px"}}
+                            options={{
+                                enableTime: true,
+                                dateFormat: 'Y-m-d H:i',
+                                time_24hr: true,
+                            }}
+                        />
+                        {errors.start_date && <FormFeedback className='d-block'>{t(errors.start_date.message)}</FormFeedback>}
+                    </Col>
+                    <Col md={6}>
+                        <Label className="form-label" for="end_date">
+                            {t('Дуусах хугацаа')}
+                        </Label>
+                        <Flatpickr
+                            required
+                            id='end_date'
+                            name='end_date'
+                            className='form-control'
+                            onChange={date => handleEndDate(date[0])}
+                            value={endPicker}
+                            style={{height: "30px"}}
+                            options={{
+                                enableTime: true,
+                                dateFormat: 'Y-m-d H:i',
+                                time_24hr: true,
+                            }}
+                        />
+                        {errors.end_date && <FormFeedback className='d-block'>{t(errors.end_date.message)}</FormFeedback>}
+                    </Col>
+                    <Col md={6} sm={12} className='mt-1'>
+                        <div>
+                            <Controller
+                                control={control}
+                                id="is_required"
+                                name="is_required"
+                                defaultValue={false}
+                                render={({ field }) => (
+                                    <Input
+                                        id="is_required"
+                                        checked={field.value}
+                                        type="checkbox"
+                                        className='me-50'
+                                        {...field}
+                                    />
+                                )}
+                            />
+                            <Label className="form-label" for="is_required">
+                                {t('Заавал бөглөх эсэх')}
+                            </Label>
+                        </div>
+                        <div>
+                            <Controller
+                                control={control}
+                                id="is_hide_employees"
+                                name="is_hide_employees"
+                                defaultValue={false}
+                                render={({ field }) => (
+                                    <Input
+                                        id="is_hide_employees"
+                                        type="checkbox"
+                                        checked={field.value}
+                                        className='me-50'
+                                        {...field}
+                                     />
+                                )}
+                            />
+                            <Label className="form-label" htmlFor="is_hide_employees">
+                                {t('Нэр нуух эсэх')}
+                            </Label>
+                        </div>
+                    </Col>
+                </Row>
+                <Col md={12} className="text-center mt-2">
+                    <div className='d-flex justify-content-between mt-3'>
+                        <Button color='secondary' className='btn-prev' outline onClick={handlePreButton}>
+                            <ChevronLeft size={14} className='align-middle me-sm-25 me-0'></ChevronLeft>
+                            <span className='align-middle d-sm-inline-block d-none'>Өмнөх</span>
+                        </Button>
+                        <Button color='primary' className='btn-next' type="submit">
+                            <span className='align-middle d-sm-inline-block d-none'>Дараах</span>
+                            <ChevronRight size={14} className='align-middle ms-sm-25 ms-0'></ChevronRight>
+                        </Button>
+                    </div>
+                </Col>
+            </Row>
+        </Fragment>
+    )
+}
+export default MainInfo;
+
+

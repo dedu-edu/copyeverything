@@ -1,0 +1,78 @@
+.fallback-spinnermd {
+  height: 100%;
+}
+.fallback-spinnermd.app-loadermd {
+  flex-direction: column;
+}
+.fallback-spinnermd.app-loadermd .loadingf {
+  margin-top: 1rem;
+}
+.fallback-spinnermd .loadingmd {
+  width: 100px;
+  height: 100px;
+}
+.fallback-spinnermd .loadingmd .effect-1md,
+.fallback-spinnermd .loadingmd .effect-2md,
+.fallback-spinnermd .loadingmd .effect-3md {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-left: 2px solid rgb(2, 0, 131);
+  box-sizing: border-box;
+}
+.fallback-spinnermd .loadingmd .effect-1md {
+  position: absolute;
+  animation: rotate 1s ease infinite;
+}
+.fallback-spinnermd .loadingmd .effect-2md {
+  position: absolute;
+  animation: rotateOpacity 1s ease infinite 0.1s;
+}
+.fallback-spinnermd .loadingmd .effect-3md {
+  animation: rotateOpacity 1s ease infinite 0.2s;
+}
+.fallback-spinnermd .loadingmd .loadingmd .effectsmd {
+  transition: all 0.3s ease;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(1turn);
+  }
+}
+@keyframes rotateOpacity {
+  0% {
+    transform: rotate(0deg);
+    opacity: 0.1;
+  }
+  100% {
+    transform: rotate(1turn);
+    opacity: 1;
+  }
+}
+.background-glassmd {
+  z-index: 9999;
+  -webkit-backdrop-filter: blur(5px);
+          backdrop-filter: blur(5px);
+  background-color: rgba(255, 255, 255, 0.1);
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.background-lightmd {
+  z-index: 10000;
+}
+
+.dark-layout .fallback-spinnermd .loadingmd .effect-1md,
+.dark-layout .fallback-spinnermd .loadingmd .effect-2md,
+.dark-layout .fallback-spinnermd .loadingmd .effect-3md {
+  border-left: 2px solid rgb(255, 255, 255);
+}/*# sourceMappingURL=medstyle.css.map */

@@ -1,0 +1,553 @@
+import traceback
+from rest_framework import mixins
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes
+from rest_framework.filters import SearchFilter
+
+from django.db import transaction
+from django.db.models import Q, F
+from django.contrib import auth
+from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.core.exceptions import ValidationError
+from django.utils.encoding import force_str, force_bytes
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from main.utils.function.utils import get_domain_url, get_domain_url_link
+from main.utils.function.utils import get_user_permissions, get_menu_unit, get_unit_user, make_connection
+from main.utils.function.pagination import CustomPagination
+from main.decorators import login_required
+
+from core.models import Employee, Schools, SubOrgs, Teachers, User
+
+from .serializers import (
+    AccessHistoryLmsStudentSerializer,
+    UserInfoSerializer,
+    AccessHistoryLmsSerializer,
+    AccessHistoryLmsSerializerAll
+)
+from lms.models import AccessHistoryLms
+
+from lms.models import AccessHistoryLms
+
+from datetime import datetime
+
+# LMS рүү нэвтрэх эрх
+LMS_LOGIN = 'lms-login'
+
+class UserDetailAPI(
+    generics.GenericAPIView,
+    mixins.ListModelMixin,
+):
+    queryset = AccessHistoryLms.objects
+    serializer_class = AccessHistoryLmsSerializerAll
+    pagination_class = CustomPagination
+
+    def get(self, request):
+        """ Нэвтэрсэн хэрэглэгчийн мэдээллийг авах """
+
+        user = User.objects.filter(email=request.user).first()
+        if not user:
+            return request.send_data({})
+
+        queryset = AccessHistoryLms.objects.filter(user=user).order_by('-in_time')
+
+        sorting = request.query_params.get('sorting')
+
+        if sorting:
+            if not isinstance(sorting, str):
+                sorting = str(sorting)
+            queryset = queryset.order_by(*sorting.split(','))
+
+        self.queryset = queryset
+        return_datas = self.list(request).data
+        return request.send_data(return_datas)
+
+
+@permission_classes([IsAuthenticated])
+class AccessHistoryLmsStudentAPI(
+    generics.GenericAPIView,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+):
+    queryset = AccessHistoryLms.objects.filter(system_type=AccessHistoryLms.STUDENT)
+    serializer_class = AccessHistoryLmsStudentSerializer
+
+    pagination_class = CustomPagination
+
+    filter_backends = [SearchFilter]
+    search_fields = ['student__student__first_name', 'student__student__code', 'student__student__last_name']
+
+    # region custom methods
+    def close_sessions(self):
+        request = self.request
+        data = request.data
+
+        # to require fields
+        if not data and not data[0]:
+            raise ValidationError({ 'id': ['Хоосон байна'] })
+
+        data = data[0]
+        now_date = datetime.now()
+
+        with transaction.atomic():
+            new_data = {
+                'out_time': now_date
+            }
+
+            for data_id in data:
+                instance = self.queryset.get(id=data_id)
+                serializer = self.get_serializer(instance, data=new_data, partial=True)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+
+    def apply_front_end_filters(self,queryset):
+        request = self.request
+
+        is_out_time = request.query_params.get('outTime')
+
+        if is_out_time:
+            queryset = queryset.filter(out_time__isnull=is_out_time!='true')
+
+        device_type = request.query_params.get('deviceType')
+
+        if device_type:
+            queryset = queryset.filter(device_type=device_type)
+
+        return queryset
+    # endregion
+
+    def get(self, request, pk=None):
+        """ Нэвтэрсэн 'student' мэдээллийг авах """
+
+        queryset = self.queryset
+
+        queryset = queryset.annotate(
+            student_first_name=F('student__student__first_name'),
+            student_last_name=F('student__student__last_name'),
+            student_idnum=F('student__student'),
+            student_code=F('student__student__code'),
+        )
+
+        if pk:
+            self.queryset = queryset
+            return_datas = self.retrieve(request, pk).data
+            return request.send_data(return_datas)
+
+        queryset = self.apply_front_end_filters(queryset)
+
+        # region Sort хийх үед ажиллана
+        sorting = request.query_params.get('sorting')
+
+        if sorting:
+            if not isinstance(sorting, str):
+                sorting = str(sorting)
+            queryset = queryset.order_by(*sorting.split(','))
+        # endregion
+
+        self.queryset = queryset
+        return_datas = self.list(request).data
+        return request.send_data(return_datas)
+
+    def put(self,request,pk=None):
+        result = request.send_info("INF_002")
+
+        try:
+            mode = request.query_params.get('mode')
+
+            if mode == 'closeSessions':
+                self.close_sessions()
+        except ValidationError as serializer_errors:
+            traceback.print_exc()
+            result = request.send_error_valid(serializer_errors.detail)
+        except Exception:
+            traceback.print_exc()
+            result = request.send_error("ERR_002")
+
+        return result
+
+
+class UserAPILoginView(
+    generics.GenericAPIView
+):
+    """ User login api view """
+
+    serializer_class = UserInfoSerializer
+
+    def get(self, request):
+        """ Нэвтэрсэн хэрэглэгчийн мэдээллийг авах """
+
+        user = User.objects.filter(email=request.user).first()
+
+        if not user:
+            return request.send_data({})
+
+        serializer = self.get_serializer(user)
+
+        return request.send_data(serializer.data)
+
+    def post(self, request):
+        """ Нэвтрэх функц """
+
+        datas = request.data
+        email = datas.get("email").strip() if datas.get("email") else None
+        password = datas.get("password").strip() if datas.get("password") else None
+
+        # Нэвтрэлт хийсэн төхөөрөмжийн мэдээллийг авах хэсэг
+        ip = None
+        user_id = None
+        is_logged = False
+
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+
+        user_agent = request.user_agent
+
+        device_type = 0
+        browser = "OTHER"
+        os = "OTHER"
+        device_name = "OTHER"
+
+        if user_agent.is_mobile:
+            device_type = AccessHistoryLms.MOBILE
+        elif user_agent.is_pc:
+            device_type = AccessHistoryLms.PC
+        else:
+            device_type = AccessHistoryLms.TABLET
+
+        if user_agent.browser.family:
+            browser = user_agent.browser.family
+
+        if user_agent.os.family:
+            os = user_agent.os.family
+
+        if user_agent.device.family:
+            device_name = user_agent.device.family
+
+        access_history_body = {
+            "system_type": AccessHistoryLms.LMS,
+            "device_type": device_type,
+            "device_name": device_name,
+            "browser": browser,
+            "os_type": os,
+            "ip": ip,
+        }
+
+        user_detail = dict()
+        try:
+            user = User.objects.filter(Q(email__iexact=email) | Q(username__iexact=email)).first()
+
+            if not user:
+                access_history_body.update({"user": user_id, "is_logged": is_logged})
+                access_history_serilaizer = AccessHistoryLmsSerializer(data=access_history_body)
+                if not access_history_serilaizer.is_valid():
+                    raise
+
+                access_history_serilaizer.save()
+
+                return request.send_error("ERR_001", "Cистемд бүртгүүлнэ үү.")
+            user_id = user.id
+
+            serializer = self.get_serializer(user)
+            user_detail = serializer.data
+
+            email = user_detail['email']
+            auth_user = auth.authenticate(request, username=email, password=password)
+
+        except Exception as e:
+            print('e', e)
+            access_history_body.update({"user": user_id, "is_logged": is_logged})
+            access_history_serilaizer = AccessHistoryLmsSerializer(data=access_history_body)
+            if not access_history_serilaizer.is_valid():
+                raise
+
+            access_history_serilaizer.save()
+            return request.send_error("ERR_002")
+
+        if not auth_user:
+            access_history_body.update({"user": user_id, "is_logged": is_logged})
+            access_history_serilaizer = AccessHistoryLmsSerializer(data=access_history_body)
+            if not access_history_serilaizer.is_valid():
+                raise
+
+            access_history_serilaizer.save()
+
+            return request.send_error("ERR_001")
+
+        # Хэрэглэгч нэвтрэх үед LMS систем рүү нэвтрэх эрхтэйг шалгах
+        user_permissions = get_user_permissions(user)
+
+        if not user_permissions:
+            access_history_body.update({"user": user_id, "is_logged": is_logged})
+            access_history_serilaizer = AccessHistoryLmsSerializer(data=access_history_body)
+            if not access_history_serilaizer.is_valid():
+                raise
+
+            access_history_serilaizer.save()
+
+            request.send_error("ERR_001", "Систем рүү нэвтрэх эрхгүй байна. Админд хандана уу")
+
+        if LMS_LOGIN not in user_permissions:
+            access_history_body.update({"user": user_id, "is_logged": is_logged})
+            access_history_serilaizer = AccessHistoryLmsSerializer(data=access_history_body)
+            if not access_history_serilaizer.is_valid():
+                raise
+
+            access_history_serilaizer.save()
+
+            return request.send_error("ERR_001", "Систем рүү нэвтрэх эрхгүй байна. Админд хандана уу")
+
+        auth.login(request, auth_user)
+
+        is_logged = True
+        access_history_body.update({"user": user_id, "is_logged": is_logged})
+        access_history_serilaizer = AccessHistoryLmsSerializer(data=access_history_body)
+        if not access_history_serilaizer.is_valid():
+            raise
+
+        access_history_serilaizer.save()
+
+        return request.send_info("INF_004", user_detail)
+
+class UserAPILogoutView(
+    generics.GenericAPIView
+):
+    """ Logout """
+
+    queryset = AccessHistoryLms.objects.all().order_by('-in_time')
+
+    @login_required()
+    def get(self, request):
+
+        user_id = request.user.id
+
+        # Нэвтрэлт дууссан цагийг нэвтрэлтийн хэсэгт update хэсэгт хийж хадгалах
+        access_id = self.queryset.filter(user=user_id).first().id if self.queryset.filter(user=user_id).exists() else None
+
+        if access_id:
+            self.queryset.filter(pk=access_id).update(out_time=datetime.now())
+
+        auth.logout(request)
+
+        return request.send_info("INF_005")
+
+
+class UserChangePasswordAPI(generics.GenericAPIView):
+    """Нэвтэрсэн хэрэглэгч өөрийн нууц үгийг солих."""
+
+    @login_required()
+    def put(self, request):
+        user = request.user
+
+        # Superuser-ийн нууц үг солих хэсгийг түр хаав.
+        if user.is_superuser:
+            return request.send_error(
+                'ERR_002',
+                'Админ хэрэглэгч энэ хэсгээс нууц үг солих боломжгүй.'
+            )
+
+        old_password = request.data.get('old_password', '')
+        password = request.data.get('password', '')
+        confirm_password = request.data.get('confirm_password', '')
+
+        if not old_password or not password or not confirm_password:
+            return request.send_error('ERR_002', 'Бүх талбарыг бөглөнө үү.')
+
+        if not user.check_password(old_password):
+            return request.send_error('ERR_002', 'Хуучин нууц үг буруу байна.')
+
+        if password != confirm_password:
+            return request.send_error('ERR_002', 'Шинэ нууц үгүүд ижил биш байна.')
+
+        if user.check_password(password):
+            return request.send_error(
+                'ERR_002',
+                'Шинэ нууц үг хуучин нууц үгээс ялгаатай байх ёстой.'
+            )
+
+        try:
+            validate_password(password, user=user)
+        except ValidationError as error:
+            return request.send_error('ERR_002', ' '.join(error.messages))
+
+        user.set_password(password)
+        user.save(update_fields=['password'])
+
+        # Нууц үг солигдсоны дараа дахин нэвтрэхийг шаардана.
+        auth.logout(request)
+
+        return request.send_info_msg('INF_002', 'Нууц үг амжилттай солигдлоо.')
+
+
+class UserMenuAPI(
+    generics.GenericAPIView,
+):
+    """ Тухайн цэсний шийдвэрлэх эрхтэй нэгжүүд болон хэрэглэгч шийдвэрлэх эрхтэй эсэх """
+
+    def get(self, request):
+
+        c_units = []
+        c_menu_list = []
+
+        user = User.objects.filter(email=request.user).first()
+
+        if not user:
+            return request.send_data(c_menu_list)
+
+        menu_id = request.query_params.get('menu')
+
+        c_units = get_unit_user(user.id)
+
+        # Хандах цэс орж ирвэл тухайн цэсэнд ямар нэгжүүд батлах эрхтэйг олох хэсэг
+        if menu_id:
+            c_menu_list = get_menu_unit(menu_id) # Цэсний шийдвэрлэх нэгжүүд
+
+            for c_menu in c_menu_list:
+                is_solved = False
+                c_menu_id = c_menu.get('id')
+
+                # Хэрэглэгчийн шийдвэрлэх нэгжүүд
+                for c_unit in c_units:
+                    c_unit_id = c_unit.get('unit_id')
+                    if c_menu_id == c_unit_id:
+                        is_solved = True
+
+                c_menu['is_solve'] = is_solved
+
+        return request.send_data(c_menu_list)
+
+class UserForgotPasswordAPI(
+    generics.GenericAPIView
+):
+    """ To process "forgot password" form submission to send reset link """
+
+    def post(self, request):
+        # Validation and sanitization of input data
+        email = request.data.get('email')
+        if not email:
+            return request.send_error("ERR_002", 'Fill input(s) correctly')
+        email = User(email=email)
+        try:
+            email.full_clean()
+        except ValidationError as e:
+            errors = e.message_dict
+            if 'email' in errors:
+                if 'и-мэйл давхцсан байна' not in [error.lower() for error in errors['email']]:
+                    return request.send_error("ERR_002", 'Fill input(s) correctly')
+        email = email.email
+
+        # Searching school config in models
+        user = User.objects.filter(email=email).first()
+        if user:
+            school = Employee.objects.filter(user=user.id).values_list('org', flat=True).first()
+            if not school:
+                school = Teachers.objects.filter(user=user.id).values_list('org', flat=True).first()
+        else:
+            return request.send_info('INF_001')
+        if not school:
+            return request.send_info('INF_001')
+
+        school = Schools.objects.filter(id=school).values('email_password', 'email_port', 'email_host', 'email_use_tls', 'email_host_user').first()
+        if not school:
+            return request.send_info('INF_001')
+
+        # Building reset link. default token expiration is 3 days and can be changed in settings with PASSWORD_RESET_TIMEOUT
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        link_domain = get_domain_url() or get_domain_url_link()
+        react_app_base_url = 'http://localhost:3000' if 'http://localhost:' in link_domain else link_domain
+        reset_link = f'{react_app_base_url}/reset-password/?ab1={uid}&ab2={token}'
+
+        # Sending email
+        config = {
+            "email_password": school['email_password'],
+            "email_port": school['email_port'],
+            "email_host": school['email_host'],
+            "email_use_tsl": school['email_use_tls'],
+        }
+        send_mail(
+            subject = 'Password Reset',
+            message = f'Please use the following link to reset your password: {reset_link}',
+            from_email = school['email_host_user'],
+            recipient_list = [email],
+            connection = make_connection(school['email_host_user'], config),
+            html_message = f'Please use the following link to reset your password: {reset_link}'
+        )
+        return request.send_info('INF_001')
+
+
+class UserForgotPasswordConfirmAPI(
+    generics.GenericAPIView
+):
+    """ To process "forgot password" form after reset link opening to update password """
+
+    @transaction.atomic()
+    def post(self, request):
+        sid = transaction.savepoint()
+        user_model = get_user_model()
+        try:
+            try:
+                uid = request.data.get('ab1')
+                uid = force_str(urlsafe_base64_decode(uid).decode())
+                user = user_model.objects.get(pk=uid)
+
+            except (TypeError, ValueError, OverflowError, user_model.DoesNotExist):
+                transaction.savepoint_rollback(sid)
+                return request.send_error('ERR_002', 'Нууц үг сэргээх холбоос буруу байна.')
+
+            token = request.data.get('ab2')
+            if not default_token_generator.check_token(user, token):
+                transaction.savepoint_rollback(sid)
+                return request.send_error('ERR_002', 'Нууц үг сэргээх холбоос хүчингүй эсвэл хугацаа нь дууссан байна.')
+
+            new_password = request.data.get('password')
+            confirm_password = request.data.get('confirm_password')
+
+            if not new_password or not confirm_password:
+                transaction.savepoint_rollback(sid)
+                return request.send_error('ERR_002', 'Нууц үгийн талбаруудыг бөглөнө үү.')
+
+            if new_password != confirm_password:
+                transaction.savepoint_rollback(sid)
+                return request.send_error('ERR_002', 'Нууц үгүүд ижил биш байна.')
+
+            if user.check_password(new_password):
+                transaction.savepoint_rollback(sid)
+                return request.send_error(
+                    'ERR_002',
+                    'Шинэ нууц үг хуучин нууц үгээс ялгаатай байх ёстой.'
+                )
+
+            try:
+                validate_password(new_password, user=user)
+            except ValidationError as error:
+                transaction.savepoint_rollback(sid)
+                return request.send_error('ERR_002', ' '.join(error.messages))
+
+            user.set_password(new_password)
+            user.save(update_fields=['password'])
+
+            return request.send_info_msg('INF_001', 'Нууц үг амжилттай шинэчлэгдлээ.')
+
+        except Exception:
+            traceback.print_exc()
+            transaction.savepoint_rollback(sid)
+            return request.send_error('ERR_002', 'Нууц үг шинэчлэх үед алдаа гарлаа.')
+
+# from django.contrib.auth.hashers import make_password
+
+# from core.models import User
+# user = User.objects.filter(email='elselt@chairman.mn').first()
+
+# password = 'Elselt@2025'
+# hash_password = make_password(password)
+
+# print(hash_password)
+
+# user.password = hash_password
+# user.save()

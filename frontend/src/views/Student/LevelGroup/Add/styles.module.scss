@@ -1,0 +1,9 @@
+.tableWrapper {
+    :global(.rdt_TableCol:first-child),
+    :global(.rdt_TableCell:first-child) {
+        width: 24px;
+        min-width: 24px;
+        max-width: 24px;
+        flex: 0 0 24px !important;
+    }
+}

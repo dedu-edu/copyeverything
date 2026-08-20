@@ -1,0 +1,749 @@
+// ** React imports
+import React, { Fragment, useContext, useState, useEffect } from 'react'
+
+import { X } from "react-feather";
+
+import useApi from "@hooks/useApi";
+import useLoader from "@hooks/useLoader";
+import useToast from "@hooks/useToast"
+import SchoolContext from "@context/SchoolContext"
+import ActiveYearContext from "@context/ActiveYearContext"
+
+import Select from 'react-select'
+
+import { useTranslation } from 'react-i18next';
+
+import { useForm, Controller, useWatch } from "react-hook-form";
+
+// import { Eye } from 'react-feather';
+
+import { Row, Col, Form, Modal, Input, Label, Button, ModalBody, ModalHeader, FormFeedback, Spinner } from "reactstrap";
+
+import { validate, ReactSelectStyles, convertDefaultValue, examType } from "@utils"
+
+import { validateSchema } from '../validateSchema';
+
+// import StudentList from "../StudentList";
+
+import classnames from 'classnames';
+import { useNavigate } from 'react-router-dom';
+
+const Addmodal = ({ open, handleModal, refreshDatas, handleEdit, editData }) => {
+
+    var values = {
+        lesson: '',
+        teacher: '',
+        class: '',
+    }
+
+    const CloseBtn = (
+        <X className="cursor-pointer" size={15} onClick={handleModal} />
+    )
+
+    const { t } = useTranslation()
+    const navigate = useNavigate()
+
+    const { school_id } = useContext(SchoolContext)
+    const { cseason_id, cyear_name } = useContext(ActiveYearContext)
+
+    const [lesson_option, setLessonOption] = useState([])
+    const [teacher_option, setTeacherOption] = useState([])
+    const [room_option, setRoomOption] = useState([])
+    const [selectedTeachers, setSelectedTeachers] = useState([])
+    const [selectedGroups, setSelectedGroups] = useState([])
+    const [select_value, setSelectValue] = useState(values)
+    const [online_checked, setOnlineChecked] = useState(false)
+    const [room_capacity, setRoomCapacity] = useState('')
+
+    // const [student_list_view, setStudentListView] = useState(false)
+    // const [studentData, setStudentDatas ] = useState([]);
+    const [groupOption, setGroupOption] = useState([]);
+    const [subGroupOption, setSubGroupOption] = useState([]);
+    const [levelGroupOption, setLevelGroupOption] = useState([]);
+
+    // ** Hook
+    const { control, handleSubmit, formState: { errors }, setError, setValue, watch } = useForm(validate(validateSchema));
+    const selected = watch()
+
+    const stypeValue = useWatch({
+        control,
+        name: "stype",
+    });
+
+    const beginDate = useWatch({ control, name: 'begin_date' });
+
+    // Loader
+    const { Loader, isLoading, fetchData } = useLoader({ isSmall: true });
+    const { isLoading: isLoadingSubGroups, fetchData: fetchSubGroups } = useLoader({});
+    const { isLoading: isLoadingLevelGroups, fetchData: fetchLevelGroups } = useLoader({});
+    const { fetchData: fetchDataOne } = useLoader({});
+    const { isLoading: postLoading, fetchData: postFetch } = useLoader({});
+
+    // Api
+    const teacherApi = useApi().hrms.teacher
+    const lessonApi = useApi().study.lessonStandart
+    const roomApi = useApi().timetable.room
+    const examApi = useApi().timetable.exam
+    const groupApi = useApi().student.group
+    const subGroupApi = useApi().student.subGroup
+    const levelGroupApi = useApi().student.levelGroup
+
+    // Хичээлийн жагсаалт
+    async function getLessonOption() {
+        const { success, data } = await fetchData(lessonApi.getExam(cyear_name, cseason_id, watch("search_teacher") || ""))
+        if (success) {
+            setLessonOption(data)
+        }
+    }
+
+    // Багшийн жагсаалт
+    async function getTeachers() {
+        const { success, data } = await fetchData(teacherApi.getTeacher(''))
+        if (success) {
+            setTeacherOption(data)
+        }
+    }
+
+    // Анги бүлгийн жагсаалт
+    async function getGroups() {
+        const { success, data } = await fetchData(groupApi.getList())
+        if (success) {
+            setGroupOption(data)
+        }
+    }
+
+    // Дэд бүлгийн жагсаалт
+    async function getSubGroups() {
+        const { success, data } = await fetchSubGroups(subGroupApi.get('Бүгд', 1, 'name'))
+        if (success) setSubGroupOption(data.results || [])
+    }
+
+    // Түвшин бүлгийн жагсаалт
+    async function getLevelGroups() {
+        const { success, data } = await fetchLevelGroups(levelGroupApi.get('Бүгд', 1, 'name'))
+        if (success) setLevelGroupOption(data.results || [])
+    }
+
+    // Өрөөний жагсаалт
+    async function getRoom() {
+        const { success, data } = await fetchData(roomApi.getList(''))
+        if (success) {
+            setRoomOption(data)
+        }
+    }
+
+    // Оюутны жагсаалт
+    // const getStudentList = async() => {
+    //     if(select_value.lesson) {
+    //         const lessonId = select_value.lesson || ''
+
+    //         const { success, data } = await fetchData(examApi.getExamStudent(lessonId, room_capacity))
+    //         if(success) {
+    //             const selected_rows = []
+    //             setStudentDatas(data)
+    //             if(data) {
+    //                 for(let i in data) {
+    //                     if(data[i].selected) {
+    //                         if(!selected_rows.includes(data[i].id)) {
+    //                             selected_rows.push(data[i].id)
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //             setValue('student', selected_rows)
+    //         }
+    //     }
+    // }
+
+    useEffect(
+        () => {
+            if (Object.keys(editData).length > 0) {
+                for (let key in editData) {
+                    if (key === 'teacher') {
+                        var values = teacher_option?.filter((e) => editData[key]?.includes(e?.id))
+                        setSelectedTeachers(values)
+                    }
+                    else if (key === 'is_online') {
+                        setOnlineChecked(editData[key])
+                    }
+                    else if (key === 'group') {
+                        var values_group = groupOption?.filter((e) => editData[key]?.includes(e?.id))
+                        setSelectedGroups(values_group)
+                    }
+                    else setValue(key, editData[key])
+                }
+
+                async function getDataOne() {
+                    const { success, data } = await fetchDataOne(examApi.getOne(editData.id))
+
+                    if (success) {
+                        setValue('sub_group', data.sub_group || [])
+                        setValue('level_group', data.level_group || [])
+                    }
+                }
+
+                getDataOne()
+            }
+        }, [editData, teacher_option, groupOption]
+    )
+
+    // useEffect(() => {
+    //     getStudentList()
+    // },[select_value.lesson, room_capacity])
+
+    function IsOnline(checked) {
+        setOnlineChecked(checked)
+        if (checked) {
+            setValue('room', '')
+        }
+    }
+
+    async function onSubmit(cdata) {
+        cdata['lesson_year'] = cyear_name
+        cdata['lesson_season'] = cseason_id
+        cdata['is_online'] = online_checked
+        cdata['teacher'] = selectedTeachers?.map((c) => c.id)
+        cdata['group'] = selectedGroups?.map((c) => c.id)
+        cdata['sub_group'] = selected?.sub_group?.map((c) => c.id)
+        cdata['level_group'] = selected?.level_group?.map((c) => c.id)
+
+        if (online_checked) {
+            cdata['room'] = null
+        }
+        cdata = convertDefaultValue(cdata)
+        if (editData?.id) {
+            const { success, errors } = await postFetch(examApi.put(cdata, editData?.id))
+            if (success) {
+                handleEdit()
+                refreshDatas()
+            }
+            else {
+                /** Алдааны мессэжийг input дээр харуулна */
+                for (let key in errors) {
+                    setError(key, { type: 'custom', message: errors[key].join() });
+                }
+            }
+        } else {
+            const { success, errors } = await postFetch(examApi.post(cdata))
+
+            if (success) {
+                const AMAN_SHALGALT = 2
+
+                if (cdata.stype === AMAN_SHALGALT && cdata.is_online) navigate('/oral-exam/test/')
+                else {
+                    handleModal()
+                    refreshDatas()
+                }
+            } else {
+                /** Алдааны мессэжийг input дээр харуулна */
+                for (let key in errors) {
+                    setError(key, { type: 'custom', message: errors[key].join() });
+                }
+            }
+        }
+    }
+
+    // useEffect(() => {
+    //     if (stypeValue == 2) {
+    //         if (beginDate) {
+    //             const beginDateObj = new Date(beginDate);
+    //             beginDateObj.setHours(8, 0, 0, 0);
+    //             const formattedBeginDate = beginDateObj.toLocaleString('sv-SE').slice(0, 16);
+
+    //             setValue('begin_date', formattedBeginDate);
+    //         }
+
+    //         if (stypeValue === 2 && beginDate) {
+    //             const beginDateObj = new Date(beginDate);
+
+    //             beginDateObj.setHours(13, 0, 0, 0);
+    //             const formattedEndDate = beginDateObj.toLocaleString('sv-SE').slice(0, 16);
+
+    //             setValue('end_date', formattedEndDate);
+    //         }
+    //     }
+    // }, [beginDate, stypeValue, setValue]);
+
+    useEffect(() => {
+        getRoom()
+        getGroups()
+        getSubGroups()
+        getLevelGroups()
+        getTeachers()
+    }, [])
+
+    useEffect(() => {
+        getLessonOption()
+    }, [watch("search_teacher")])
+
+    // Шалгалт өгөх оюутнуудын id авах функц
+    // function handleSelectedModal(params) {
+    //     if(studentData) {
+    //         for (let i in studentData) {
+    //             if(!params.includes(studentData[i].id)) {
+    //                 studentData[i].selected = false
+    //             }
+    //             else {
+    //                 studentData[i].selected = true
+    //             }
+    //         }
+    //     }
+    //     setValue('student', params)
+    // }
+
+    // function handleStudentModal() {
+    //     setStudentListView(false)
+    // }
+
+    return (
+        <Fragment>
+            <Modal
+                isOpen={open}
+                toggle={handleModal}
+                className="modal-dialog-centered modal-lg"
+                contentClassName="pt-0"
+                backdrop='static'
+            >
+                <ModalHeader
+                    className="mb-1"
+                    toggle={handleModal}
+                    close={CloseBtn}
+                    tag="div"
+                >
+                    {
+                        Object?.keys(editData)?.length > 0 ?
+                            <h5 className="modal-title">{t('Шалгалтын хуваарь засах')}</h5>
+                            :
+                            <h5 className="modal-title">{t('Шалгалтын хуваарь бүртгэх')}</h5>
+                    }
+                </ModalHeader>
+                <ModalBody className="flex-grow-1">
+                    <Row tag={Form} className="gy-1" onSubmit={handleSubmit(onSubmit)}>
+                        <Col md={6}>
+                            <Label className="form-label" for="search_teacher">
+                                {t('Хичээлийн дүн оруулсан багшаар хайх')}
+                            </Label>
+                            <Controller
+                                control={control}
+                                defaultValue=''
+                                name="search_teacher"
+                                render={({ field: { value, onChange } }) => {
+                                    return (
+                                        <Select
+                                            name="search_teacher"
+                                            id="search_teacher"
+                                            classNamePrefix='select'
+                                            isClearable
+                                            className={classnames('react-select', { 'is-invalid': errors.search_teacher })}
+                                            isLoading={isLoading}
+                                            placeholder={t('-- Сонгоно уу --')}
+                                            options={teacher_option || []}
+                                            value={value ? teacher_option?.find((item) => item?.id === value) : ""}
+                                            noOptionsMessage={() => t('Хоосон байна.')}
+                                            onChange={(val) => {
+                                                onChange(val?.id || "")
+                                                setValue("lesson", "")
+                                            }}
+                                            styles={ReactSelectStyles}
+                                            getOptionValue={(option) => option.id}
+                                            getOptionLabel={(option) => `${option?.rank_name || ""} ${option?.last_name || ""} ${option?.first_name || ""}`}
+                                        />
+                                    )
+                                }}
+                            ></Controller>
+                            {errors.search_teacher && <FormFeedback className='d-block'>{t(errors.search_teacher.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={6}>
+                            <Label className="form-label" for="lesson">
+                                {t('Хичээл')}
+                            </Label>
+                            <Controller
+                                control={control}
+                                defaultValue=''
+                                name="lesson"
+                                render={({ field: { value, onChange } }) => {
+                                    return (
+                                        <Select
+                                            name="lesson"
+                                            id="lesson"
+                                            classNamePrefix='select'
+                                            isClearable
+                                            className={classnames('react-select', { 'is-invalid': errors.lesson })}
+                                            isLoading={isLoading}
+                                            placeholder={t('-- Сонгоно уу --')}
+                                            options={lesson_option || []}
+                                            value={value ? lesson_option.find((c) => c?.id === value) : ""}
+                                            noOptionsMessage={() => t('Хоосон байна.')}
+                                            onChange={(val) => {
+                                                onChange(val?.id || '')
+                                                // setSelectValue({
+                                                //     lesson: val?.id || '',
+                                                //     teacher: select_value.teacher,
+                                                //     class: select_value.class,
+                                                // })
+                                            }}
+                                            styles={ReactSelectStyles}
+                                            getOptionValue={(option) => option.id}
+                                            getOptionLabel={(option) => option.code + ' ' + option.name}
+                                        />
+                                    )
+                                }}
+                            ></Controller>
+                            {errors.lesson && <FormFeedback className='d-block'>{t(errors.lesson.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={6}>
+                            <Label className="form-label" for="stype">
+                                {t('Шалгалт авах төрөл')}
+                            </Label>
+                            <Controller
+                                control={control}
+                                defaultValue=''
+                                name="stype"
+                                render={({ field: { value, onChange } }) => {
+                                    return (
+                                        <Select
+                                            name="stype"
+                                            id="stype"
+                                            classNamePrefix='select'
+                                            isClearable
+                                            className={classnames('react-select', { 'is-invalid': errors.stype })}
+                                            isLoading={isLoading}
+                                            placeholder={t('-- Сонгоно уу --')}
+                                            options={examType() || []}
+                                            value={value && examType().find((c) => c.id === value)}
+                                            noOptionsMessage={() => t('Хоосон байна.')}
+                                            onChange={(val) => {
+                                                onChange(val?.id || '')
+                                            }}
+                                            styles={ReactSelectStyles}
+                                            getOptionValue={(option) => option.id}
+                                            getOptionLabel={(option) => option.name}
+                                        />
+                                    )
+                                }}
+                            >
+                            </Controller>
+                            {errors.stype && <FormFeedback className='d-block'>{t(errors.stype.message)}</FormFeedback>}
+                        </Col>
+                        <Row>
+                            <Col md={6} className="pt-2">
+                                <Controller
+                                    control={control}
+                                    id="is_online"
+                                    name="is_online"
+                                    defaultValue={false}
+                                    render={({ field }) => (
+                                        <Input
+                                            id="is_online"
+                                            type="checkbox"
+                                            className='me-50'
+                                            {...field}
+                                            onChange={(e) =>
+                                                IsOnline(e.target.checked)
+                                            }
+                                            checked={online_checked}
+                                        />
+                                    )}
+                                />
+                                <Label className="form-label" for="is_online">
+                                    {t('Онлайн шалгалт эсэх')}
+                                </Label>
+                            </Col>
+                        </Row>
+                        <Col md={6}>
+                            <Label className="form-label" for="room">
+                                {t('Шалгалт авах өрөө')}
+                            </Label>
+                            <Controller
+                                control={control}
+                                defaultValue=''
+                                name="room"
+                                render={({ field: { value, onChange } }) => {
+                                    return (
+                                        <Select
+                                            name="room"
+                                            id="room"
+                                            classNamePrefix='select'
+                                            isDisabled={online_checked}
+                                            isClearable
+                                            className={classnames('react-select', { 'is-invalid': errors.room })}
+                                            isLoading={isLoading}
+                                            placeholder={t('-- Сонгоно уу --')}
+                                            options={room_option || []}
+                                            value={value && room_option.find((c) => c.id === value)}
+                                            noOptionsMessage={() => t('Хоосон байна.')}
+                                            onChange={(val) => {
+                                                onChange(val?.id || '')
+                                                setRoomCapacity(val?.volume || '')
+                                            }}
+                                            styles={ReactSelectStyles}
+                                            getOptionValue={(option) => option.id}
+                                            getOptionLabel={(option) => option.full_name}
+                                        />
+                                    )
+                                }}
+                            >
+                            </Controller>
+                            {errors.room && <FormFeedback className='d-block'>{t(errors.room.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={6}>
+                            <Label className="form-label" for="room_name">
+                                {t('Шалгалт авах анги танхимийн нэр')}
+                            </Label>
+                            <Controller
+                                defaultValue=''
+                                control={control}
+                                name="room_name"
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        id={field.name}
+                                        disabled={online_checked}
+                                        bsSize="sm"
+                                        placeholder={t('Анги танхимийн нэр')}
+                                        type="text"
+                                        invalid={errors[field.name] && true}
+                                    />
+                                )}
+                            />
+                            {errors.room_name && <FormFeedback className='d-block'>{t(errors.room_name.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={6}>
+                            <Label className="form-label" for="begin_date">
+                                {t('Эхлэх хугацаа')}
+                            </Label>
+                            <Controller
+                                defaultValue=''
+                                control={control}
+                                name="begin_date"
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        id={field.name}
+                                        bsSize="sm"
+                                        placeholder={t('Эхлэх хугацаа')}
+                                        type="datetime-local"
+                                        invalid={errors[field.name] && true}
+                                    />
+                                )}
+                            />
+                            {errors.begin_date && <FormFeedback className='d-block'>{t(errors.begin_date.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={6}>
+                            <Label className="form-label" for="end_date">
+                                {t('Дуусах хугацаа')}
+                            </Label>
+                            <Controller
+                                defaultValue=''
+                                control={control}
+                                name="end_date"
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        id={field.name}
+                                        bsSize="sm"
+                                        placeholder={t('Дуусах хугацаа')}
+                                        type="datetime-local"
+                                        // readOnly={stypeValue === 2}
+                                        invalid={errors[field.name] && true}
+                                    />
+                                )}
+                            />
+                            {errors.end_date && <FormFeedback className='d-block'>{t(errors.end_date.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={6}>
+                            <Label className="form-label" for="group">
+                                {t('Шалгалт авах анги дамжаа')}
+                            </Label>
+                            <Controller
+                                control={control}
+                                defaultValue=''
+                                name="group"
+                                render={({ field }) => {
+                                    return (
+                                        <Select
+                                            name="group"
+                                            id="group"
+                                            classNamePrefix='select'
+                                            isClearable
+                                            isMulti
+                                            className={classnames('react-select', { 'is-invalid': errors.group })}
+                                            isLoading={isLoading}
+                                            placeholder={t('-- Сонгоно уу --')}
+                                            options={groupOption || []}
+                                            value={selectedGroups}
+                                            noOptionsMessage={() => t('Хоосон байна.')}
+                                            onChange={(val) => {
+                                                setSelectedGroups(val)
+                                            }}
+                                            styles={ReactSelectStyles}
+                                            getOptionValue={(option) => option.id}
+                                            getOptionLabel={(option) => option?.name}
+                                        />
+                                    )
+                                }}
+                            ></Controller>
+                            {errors.teacher && <FormFeedback className='d-block'>{t(errors.teacher.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={6}>
+                            <Controller
+                                control={control}
+                                defaultValue={[]}
+                                name="sub_group"
+                                render={({ field }) => {
+                                    return (
+                                        <>
+                                            <Label className="form-label" for={field.name}>
+                                                {t('Шалгалт авах дэд бүлэг')}
+                                            </Label>
+                                            <Select
+                                                {...field}
+                                                id={field.name}
+                                                classNamePrefix='select'
+                                                isClearable
+                                                isMulti
+                                                className={classnames('react-select', { 'is-invalid': errors[field.name] })}
+                                                isLoading={isLoadingSubGroups}
+                                                placeholder={t('-- Сонгоно уу --')}
+                                                options={subGroupOption || []}
+                                                noOptionsMessage={() => t('Хоосон байна.')}
+                                                styles={ReactSelectStyles}
+                                                getOptionValue={(option) => option.id}
+                                                getOptionLabel={(option) => option.name}
+                                            />
+                                            {errors[field.name] && <FormFeedback className='d-block'>{t(errors[field.name].message)}</FormFeedback>}
+                                        </>
+                                    )
+                                }}
+                            ></Controller>
+                        </Col>
+                        <Col md={6}>
+                            <Label className="form-label" for="teacher">
+                                {t('Хянах багш')}
+                            </Label>
+                            <Controller
+                                control={control}
+                                defaultValue=''
+                                name="teacher"
+                                render={({ field: { value, onChange } }) => {
+                                    return (
+                                        <Select
+                                            name="teacher"
+                                            id="teacher"
+                                            classNamePrefix='select'
+                                            isClearable
+                                            isMulti
+                                            className={classnames('react-select', { 'is-invalid': errors.teacher })}
+                                            isLoading={isLoading}
+                                            placeholder={t('-- Сонгоно уу --')}
+                                            options={teacher_option || []}
+                                            value={selectedTeachers}
+                                            noOptionsMessage={() => t('Хоосон байна.')}
+                                            onChange={(val) => {
+                                                setSelectedTeachers(val)
+                                            }}
+                                            styles={ReactSelectStyles}
+                                            getOptionValue={(option) => option.id}
+                                            getOptionLabel={(option) => `${option?.rank_name || ""} ${option?.last_name || ""} ${option?.first_name || ""}`}
+                                        />
+                                    )
+                                }}
+                            ></Controller>
+                            {errors.teacher && <FormFeedback className='d-block'>{t(errors.teacher.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={6}>
+                            <Controller
+                                control={control}
+                                defaultValue={[]}
+                                name="level_group"
+                                render={({ field }) => {
+                                    return (
+                                        <>
+                                            <Label className="form-label" for={field.name}>
+                                                {t('Шалгалт авах түвшин бүлэг')}
+                                            </Label>
+                                            <Select
+                                                {...field}
+                                                id={field.name}
+                                                classNamePrefix='select'
+                                                isClearable
+                                                isMulti
+                                                className={classnames('react-select', { 'is-invalid': errors[field.name] })}
+                                                isLoading={isLoadingLevelGroups}
+                                                placeholder={t('-- Сонгоно уу --')}
+                                                options={levelGroupOption || []}
+                                                noOptionsMessage={() => t('Хоосон байна.')}
+                                                styles={ReactSelectStyles}
+                                                getOptionValue={(option) => option.id}
+                                                getOptionLabel={(option) => option.name}
+                                            />
+                                            {errors[field.name] && <FormFeedback className='d-block'>{t(errors[field.name].message)}</FormFeedback>}
+                                        </>
+                                    )
+                                }}
+                            ></Controller>
+                        </Col>
+                        {/* <Col xs={12}>
+                            <Label className="form-label" for="student">
+                                {t("Нэмэлтээр шалгалт өгч буй оюутан")}
+                            </Label>
+                            <Controller
+                                control={control}
+                                defaultValue=''
+                                name="student"
+                                render={({ field: { value, onChange } }) => {
+                                    return (
+                                        <Select
+                                            name="student"
+                                            id="student"
+                                            classNamePrefix='select'
+                                            isClearable
+                                            className={classnames('basic-multi-select', { 'is-invalid': errors.group })}
+                                            isLoading={isLoading}
+                                            placeholder={t(`-- Сонгоно уу --`)}
+                                            options={studentOption || []}
+                                            value={studentOption.filter((c) => c.id === value)}
+                                            noOptionsMessage={() => t('Хоосон байна.')}
+                                            onChange={(val) => {
+                                                onChange(val?.id || '')
+                                                setSelectedStudents(val)
+                                            }}
+                                            isMulti
+                                            isSearchable={true}
+                                            styles={ReactSelectStyles}
+                                            isDisabled
+                                            getOptionValue={(option) => option.id}
+                                            getOptionLabel={(option) => option.full_name}
+                                        />
+                                    )
+                                }}
+                            ></Controller>
+                            {errors.student && <FormFeedback className='d-block'>{errors.student.message}</FormFeedback>}
+                        </Col> */}
+                        <Col md={12} className="mt-2 text-center">
+                            <Button className="me-2" color="primary" type="submit" disabled={postLoading}>
+                                {postLoading && <Spinner size='sm' className='me-1' />}
+                                {t('Хадгалах')}
+                            </Button>
+                            <Button color="secondary" type="reset" outline onClick={handleModal}>
+                                {t('Буцах')}
+                            </Button>
+                        </Col>
+                    </Row>
+                    {/* {
+                        student_list_view &&
+                        <StudentList
+                            open={student_list_view}
+                            handleModal={handleStudentModal}
+                            handleSelectedModal={handleSelectedModal}
+                            datas={studentData}
+                            isLoading={isLoading}
+                            Loader={Loader}
+                        />
+                    } */}
+                </ModalBody>
+            </Modal>
+        </Fragment>
+    );
+};
+export default Addmodal;

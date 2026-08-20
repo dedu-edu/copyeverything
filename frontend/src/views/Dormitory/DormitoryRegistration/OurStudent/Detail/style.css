@@ -1,0 +1,10 @@
+.fontdark {
+  color: #6E6B7B;
+}
+
+.dark-layout .fontdark {
+  color: rgba(163, 166, 171, 0.7490196078);
+}
+.dark-layout .fontdarksmooth {
+  color: #959697;
+}/*# sourceMappingURL=style.css.map */

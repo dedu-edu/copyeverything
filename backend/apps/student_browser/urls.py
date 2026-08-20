@@ -1,0 +1,51 @@
+from django.urls import path
+
+from .views import *
+
+
+urlpatterns = [
+
+    # Их сургуулийн бүтэц зохион байгуулалт
+    path('structure/', StudentStructureAPIView.as_view()),
+    path('structure/<int:pk>/', StudentStructureAPIView.as_view()),
+
+    # Сургалтын хөтөлбөр
+    path('salbar/', StudentListAPIView.as_view()),
+
+    # Суралцагчын хөгжил
+    path('develop/', StudentDevelopAPIView.as_view()),
+    path('develop/<int:pk>/', StudentDevelopAPIView.as_view()),
+
+    # Номын сан танилцуулга
+    path('library/', StudentLibraryAPIView.as_view()),
+    path('library/<int:pk>/', StudentLibraryAPIView.as_view()),
+
+    # Сэтгэл зүйн булан
+    path('psycholocal/', StudentPsycholocalAPIView.as_view()),
+    path('psycholocal/<int:pk>/', StudentPsycholocalAPIView.as_view()),
+
+    # Сэтгэл зүйн зөвлөмж
+    path('psy/help/', StudentPsyHelpAPIView.as_view()),
+    path('psy/help/<int:pk>/', StudentPsyHelpAPIView.as_view()),
+
+    # Эрүүл мэнд
+    path('health/', HealthAPIView.as_view()),
+    path('health/<int:pk>/', HealthAPIView.as_view()),
+
+    # Эрүүл мэнд зөвлөмж
+    path('health/help/', HealthHelpAPIView.as_view()),
+    path('health/help/<int:pk>/', HealthHelpAPIView.as_view()),
+
+    # номын сангийн журам
+    path('rules/',  StudentRulesAPIView.as_view()),
+    path('rules/<int:pk>/',  StudentRulesAPIView.as_view()),
+
+    # номын сангийн цагийн хуваарь
+    path('time/',  StudentTimeAPIView.as_view()),
+    path('time/<int:pk>/',  StudentTimeAPIView.as_view()),
+
+    # Суралцагчийн гарын авлага
+    path('learner-guide/', LearnerGuideAPIView.as_view()),
+    path('learner-guide/<int:pk>/', LearnerGuideAPIView.as_view()),
+
+]

@@ -1,0 +1,17 @@
+.gpareport table,
+.gpareport tr,
+.gpareport th,
+.gpareport td {
+  border: 1px solid rgb(0, 0, 0);
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+  padding-bottom: 0.1rem;
+  padding-top: 0.1rem;
+  color: #000;
+  font-size: 13px;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 32px 48px 32px 48px;
+}/*# sourceMappingURL=style.css.map */

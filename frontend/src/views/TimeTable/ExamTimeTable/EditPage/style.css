@@ -1,0 +1,46 @@
+.light-glow {
+  box-shadow: 0 4px 24px 0 rgba(34, 41, 47, 0.1) !important;
+  border: 1px solid rgba(135, 135, 135, 0.049);
+}
+
+.hasah-oyutnuud {
+  border-bottom: 1px solid rgba(42, 42, 42, 0.118);
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.hoverglass:hover {
+  background-color: rgba(196, 203, 205, 0.15) !important;
+  transition: 0.2s;
+}
+
+.examrep table,
+.examrep tr,
+.examrep th,
+.examrep td {
+  border: 1px solid rgba(0, 0, 0, 0.239);
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+  padding-bottom: 0.1rem;
+  padding-top: 0.1rem;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.dark-layout .hoverglass:hover {
+  background-color: rgba(80, 120, 142, 0.15) !important;
+  transition: 0.2s;
+}
+.dark-layout .light-glow {
+  box-shadow: 0 4px 10px 0 rgba(105, 105, 105, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.082);
+}
+.dark-layout .hasah-oyutnuud {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.082);
+}
+.dark-layout .examrep table,
+.dark-layout .examrep tr,
+.dark-layout .examrep th,
+.dark-layout .examrep td {
+  border: 1px solid rgba(255, 255, 255, 0.134);
+}/*# sourceMappingURL=style.css.map */

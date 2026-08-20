@@ -1,0 +1,187 @@
+import React, { Fragment, useEffect, useState} from 'react'
+import {
+    Row,
+    Col,
+    Modal,
+	Form,
+	Input,
+	Label,
+	Button,
+    ModalBody,
+    ModalHeader,
+    Spinner,
+} from "reactstrap";
+
+import { t } from 'i18next';
+import Select from 'react-select'
+import classnames from 'classnames'
+
+import useApi from '@hooks/useApi';
+import useLoader from '@hooks/useLoader';
+
+import { validateSchema } from './validateSchema'
+
+import { useForm, Controller } from "react-hook-form";
+import { convertDefaultValue , validate, ReactSelectStyles } from "@utils"
+
+const UpdateModal = ({ open, editId, refreshDatas, handleEdit}) => {
+    // Loader
+    const {isLoading, fetchData, Loader} = useLoader({isSmall: true})
+
+    const [leader_option, setLeaderOption] = useState([])
+    const [leaderId, setLeaderId] = useState('')
+
+    const { control, handleSubmit, setValue,  setError, formState: { errors } } = useForm(validate(validateSchema));
+
+    // Api
+    const getDepartmentApi = useApi().hrms.department
+
+    async function getDatas() {
+        if(editId) {
+            const { success, data } = await fetchData(getDepartmentApi.getRegisterOne(editId))
+            if(success) {
+                // засах үед дата байх юм бол setValue-р дамжуулан утгыг харуулна
+                if(data === null) return
+                for(let key in data) {
+                    if(key === 'leader'){
+                        setLeaderId(data[key])
+                    }
+
+                    if(data[key] !== null)
+                        setValue(key, data[key])
+                    else setValue(key, '')
+                }
+            }
+        }
+    }
+
+    /* Тэнхимийн ахлагч жагсаалт авах функц */
+    async function getLeaderList() {
+        const { success, data } = await fetchData(getDepartmentApi.leaderList())
+        if (success) {
+            setLeaderOption(data)
+        }
+    }
+
+    useEffect(() => {
+        getDatas()
+        getLeaderList()
+    },[open])
+    async function onSubmit(cdata) {
+        if(editId) {
+            cdata = convertDefaultValue(cdata)
+            const { success, error } = await fetchData(getDepartmentApi.putRegister(cdata, editId))
+            if(success) {
+                refreshDatas()
+                handleEdit()
+            }
+            else {
+                /** Алдааны мессэжийг input дээр харуулна */
+                for (let key in error) {
+                    setError(error[key].field, { type: 'custom', message:  error[key].msg});
+                }
+            }
+        }
+	}
+
+	return (
+        <Fragment>
+            <Modal
+                isOpen={open}
+                toggle={handleEdit}
+                className="sidebar-md"
+                modalClassName='modal-slide-in'
+                contentClassName='pt-0'
+                onClosed={handleEdit}
+                backdrop='static'
+                >
+                {
+                    isLoading &&
+                        <div className='suspense-loader'>
+                            <Spinner size='bg'/>
+                            <span className='ms-50'>Түр хүлээнэ үү...</span>
+                        </div>
+                }
+                <ModalHeader
+                    className="mb-1"
+                    toggle={handleEdit}
+                    // close={CloseBtn}
+                    tag="div"
+                 >
+                    <h5 className="modal-title">{t('Тэнхимийн мэдээлэл засах')}</h5>
+                </ModalHeader>
+                <ModalBody className="flex-grow-1">
+                    <Row tag={Form} className="gy-1" onSubmit={handleSubmit(onSubmit)}>
+                        <Col  md={12}>
+                            <Label className="form-label" for="leader">
+                                {t('Тэнхимийн эрхлэгч')}
+                            </Label>
+                            <Controller
+                                control={control}
+                                defaultValue={leaderId}
+                                name="leader"
+                                render={({ field: { value, onChange} }) => {
+                                    return (
+                                        <Select
+                                            name="leader"
+                                            id="leader"
+                                            classNamePrefix='select'
+                                            isClearable
+                                            className={classnames('react-select', { 'is-invalid': errors.leader })}
+                                            isLoading={isLoading}
+                                            placeholder={t('-- Сонгоно уу --')}
+                                            options={leader_option || []}
+                                            value={value && leader_option.find((c) => c.id === value)}
+                                            noOptionsMessage={() => {t('Хоосон байна.')}}
+                                            onChange={(val) => {
+                                                onChange(val?.id || '')
+
+                                            }}
+                                            styles={ReactSelectStyles}
+                                            getOptionValue={(option) => option.id}
+                                            getOptionLabel={(option) => option.full_name}
+
+                                        />
+                                    )
+                                }}
+                            />
+                            {errors.leader && <FormFeedback className='d-block'>{t(errors.leader.message)}</FormFeedback>}
+                        </Col>
+                        <Col md={12}>
+                            <Label className="form-label" for="name">
+                                {t('Тэнхимийн нэр')}
+                            </Label>
+                            <Controller
+                                defaultValue=''
+                                control={control}
+                                id="name"
+                                name="name"
+                                render={({ field }) => (
+                                    <Input
+                                        id ="name"
+                                        bsSize="sm"
+                                        // disabled={true}
+                                        placeholder={t('Тэнхимийн нэр')}
+                                        {...field}
+                                        type="text"
+                                        invalid={errors.name && true}
+                                    />
+                                )}
+                            />
+                            {errors.name && <FormFeedback className='d-block'>{t(errors.name.message)}</FormFeedback>}
+                        </Col>
+                        <Col className='text-center mt-2' md={12}>
+                            <Button className="me-2" size='sm' color="primary" type="submit">
+                                {t('Хадгалах')}
+                            </Button>
+                            <Button size='sm' color="secondary" type="reset" onClick={handleEdit}>
+                                {t('Буцах')}
+                            </Button>
+                        </Col>
+                    </Row>
+                </ModalBody>
+            </Modal>
+        </Fragment>
+	);
+};
+export default UpdateModal;

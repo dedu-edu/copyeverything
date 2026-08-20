@@ -1,0 +1,119 @@
+// ** Icons Import
+import { Circle } from 'react-feather'
+
+export default [
+    {
+        id: 'student',
+        title: 'Оюутан',
+        icon: <i className="fas fa-user-graduate"></i>,
+        navLink: "/student",
+        navChildren: [
+            {
+                id: 'student1',
+                title: 'Анги дамжааны бүртгэл',
+                icon: <Circle size={8} />,
+				children: [
+					{
+                        id: 'student1_1',
+                        title: 'Анги дамжааны бүртгэл',
+                        icon: <Circle size={8} />,
+                        navLink: "student/group/",
+					},
+                    {
+                        id: 'student1_2',
+                        title: 'Дэд бүлэг',
+                        icon: <Circle size={8} />,
+                        navLink: 'student/sub-group',
+                    },
+                    {
+                        id: 'student1_3',
+                        title: 'Түвшин бүлэг',
+                        icon: <Circle size={8} />,
+                        navLink: 'student/level-group',
+                    },
+                ]
+            },
+            {
+                id: 'student2',
+                title: 'Оюутны бүртгэл',
+                icon: <Circle size={8} />,
+                navLink: "student/register"
+            },
+            {
+                id: 'student3',
+                title: 'Чөлөөний бүртгэл',
+                icon: <Circle size={8} />,
+                navLink: "student/leave/"
+            },
+            {
+                id: 'student4',
+                title: 'Шилжилт хөдөлгөөний бүртгэл',
+                icon: <Circle size={8} />,
+                navLink: "student/shift"
+            },
+            // {
+            //     id: 'student5',
+            //     title: 'Төгсөлт',
+            //     icon: <Circle size={8} />,
+            //     navLink: "student/graduation"
+            // },
+            // {
+            //     id: 'student10',
+            //     title: 'Хавсралт',
+            //     icon: <Circle size={8} />,
+            //     navLink: "student/attachment"
+            // },
+            {
+                id: 'student7',
+                title: 'Боловсролын зээлийн сан',
+                icon: <Circle size={8} />,
+                navLink: "student/educational-loan-fund"
+            },
+            {
+                id: 'student11',
+                title: 'Тодорхойлолт',
+                icon: <Circle size={8} />,
+                navLink: "student/specification"
+            },
+            // {
+            //     id: 'student12',
+            //     title: 'Виз',
+            //     icon: <Circle size={8} />,
+            //     navLink: "student/viz-status"
+            // },
+            // {
+            //     id: 'student12',
+            //     title: 'Дотуур байранд амьдрах хүсэлт',
+            //     icon: <Circle size={8} />,
+            //     navLink: "student/dormitory"
+            // },
+        ]
+    },
+    {
+        id: 'graduation',
+        title: 'Төгсөлт',
+        icon: <i className="far fa-graduation-cap"></i>,
+        navLink: "/student",
+        navChildren:
+        [
+            {
+                id:'student17',
+                title:'Төгсөгчид',
+                icon: <Circle size={8} />,
+                navLink:"student/graduates"
+            },
+            {
+                id: 'student16',
+                title: 'Төгсөлтийн ажил',
+                icon: <Circle size={8} />,
+                navLink: "student/graduation"
+            },
+            {
+                id: 'student10',
+                title: 'Хавсралт',
+                icon: <Circle size={8} />,
+                navLink: "student/attachment"
+            },
+        ]
+    },
+]

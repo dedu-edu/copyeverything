@@ -1,0 +1,23 @@
+.tabscroll {
+  --sb-track-color: #232e33;
+  --sb-thumb-color: var(--bs-primary);
+  --sb-size: 15px;
+}
+
+.tabscroll::-webkit-scrollbar {
+  width: var(--sb-size);
+}
+
+.tabscroll::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 2px grey;
+  border-radius: 10px;
+  -webkit-transition: 0.3s;
+  transition: 0.3s;
+}
+
+.tabscroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom right, var(--bs-primary), rgba(81, 118, 163, 0.6078431373));
+  border-radius: 10px;
+  -webkit-transition: 0.3s;
+  transition: 0.3s;
+}/*# sourceMappingURL=style.css.map */

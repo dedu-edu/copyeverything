@@ -1,0 +1,11 @@
+User-agent: Googlebot
+Disallow:
+
+User-agent: googlebot-mobile
+Disallow:
+
+User-agent: *
+Disallow: /cgi-bin/
+
+Sitemap: https://sis.uia.gov.mn/sitemap.xml
+Sitemap: https://a541975.sitemaphosting7.com/4647474/sitemap_4647474.xml

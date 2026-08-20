@@ -1,0 +1,10 @@
+@page {
+    size: A4 landscape;
+    margin: 0px 0px 14px 0px;
+    /* margin: 0; */
+}
+
+body {
+    /* font-family: serif !important; */
+    letter-spacing: 0.4px;
+}
