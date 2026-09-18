@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<flowgorithm fileversion="4.2">
+    <attributes>
+        <attribute name="name" value="lab1-3"/>
+        <attribute name="authors" value="Acer"/>
+        <attribute name="about" value=""/>
+        <attribute name="saved" value="2026-09-16 07:41:32 PM"/>
+        <attribute name="created" value="QWNlcjtMQVBUT1AtMVVWVE80RUY7MjAyNi0wOS0xNjswNzozMzowNCBQTTsyNzQ5"/>
+        <attribute name="edited" value="QWNlcjtMQVBUT1AtMVVWVE80RUY7MjAyNi0wOS0xNjswNzo0MTozMiBQTTsxOzI4NTc="/>
+    </attributes>
+    <function name="Main" type="None" variable="">
+        <parameters/>
+        <body>
+            <declare name="givenNum, digit" type="Integer" array="False" size=""/>
+            <assign variable="digit" expression="0"/>
+            <input variable="givenNum"/>
+            <while expression="givenNum != 0">
+                <assign variable="givenNum" expression="givenNum / 10"/>
+                <assign variable="digit" expression="digit + 1"/>
+            </while>
+            <if expression="digit==0">
+                <then>
+                    <output expression="1" newline="True"/>
+                </then>
+                <else>
+                    <output expression="digit" newline="True"/>
+                </else>
+            </if>
+        </body>
+    </function>
+</flowgorithm>
