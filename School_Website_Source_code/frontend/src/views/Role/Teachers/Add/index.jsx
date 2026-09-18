@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next'
 import AuthContext from "@context/AuthContext"
 import SchoolContext from "@context/SchoolContext"
 import { Controller, useForm } from 'react-hook-form'
-import { validateSchema } from '../Add/validateSchema'
+import { validateSchema } from './validateSchema'
 import ActiveYearContext from "@context/ActiveYearContext"
 import { validate, ReactSelectStyles, convertDefaultValue } from '@utils'
 import Flatpickr from 'react-flatpickr'

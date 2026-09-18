@@ -19,7 +19,7 @@ import Addmodal from './Add';
 
 import EditModal from './Edit';
 
-import Detail from '../GymPayment/Detail'
+import Detail from './Detail'
 
 const GymPayment = () => {
     const { t } = useTranslation()
