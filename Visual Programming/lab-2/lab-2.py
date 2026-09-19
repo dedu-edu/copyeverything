@@ -22,8 +22,8 @@ def plus_op():
 def minus_op():
     try:
         choose_operation("-")
-        num1 = float(num1_entry.get())
-        num2 = float(num2_entry.get())
+        num1 = float(num1_entry.get().strip())
+        num2 = float(num2_entry.get().strip())
         result.clear()
         result.append(str(num1 - num2))
         add_to_history(result, num1, num2, "-")
@@ -34,8 +34,8 @@ def minus_op():
 def multi_op():
     try:
         choose_operation("*")
-        num1 = float(num1_entry.get())
-        num2 = float(num2_entry.get())
+        num1 = float(num1_entry.get().strip())
+        num2 = float(num2_entry.get().strip())
         result.clear()
         result.append(str(num1 * num2))
         add_to_history(result, num1, num2, "*")
@@ -46,8 +46,8 @@ def multi_op():
 def divide_op():
     try:
         choose_operation("/")
-        num1 = float(num1_entry.get())
-        num2 = float(num2_entry.get())
+        num1 = float(num1_entry.get().strip())
+        num2 = float(num2_entry.get().strip())
         if num2 == 0:
             warning_label.config(text = 'Cannot divide by Zero!!!', font=("Arial", 20, "bold"), fg='red')
         else:
@@ -61,8 +61,8 @@ def divide_op():
 def quotient_divide_op():
     try:
         choose_operation("//")
-        num1 = float(num1_entry.get())
-        num2 = float(num2_entry.get())
+        num1 = float(num1_entry.get().strip())
+        num2 = float(num2_entry.get().strip())
         if num2 == 0:
             warning_label.config(text = 'Cannot divide by Zero!!!', font=("Arial", 20, "bold"), fg='red')
         else:
@@ -76,8 +76,8 @@ def quotient_divide_op():
 def remainder_divide_op():
     try:
         choose_operation("%")
-        num1 = float(num1_entry.get())
-        num2 = float(num2_entry.get())
+        num1 = float(num1_entry.get().strip())
+        num2 = float(num2_entry.get().strip())
         if num2 == 0:
             warning_label.config(text = 'Cannot divide by Zero!!!', font=("Arial", 20, "bold"), fg='red')
         else:
@@ -91,8 +91,8 @@ def remainder_divide_op():
 def power_op():
     try:
         choose_operation("^")
-        num1 = float(num1_entry.get())
-        num2 = float(num2_entry.get())
+        num1 = float(num1_entry.get().strip())
+        num2 = float(num2_entry.get().strip())
         result.clear()
         result.append(str(num1 ** num2))
         add_to_history(result, num1, num2, "^")
