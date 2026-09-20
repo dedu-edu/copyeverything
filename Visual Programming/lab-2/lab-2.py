@@ -7,6 +7,8 @@ root.geometry(f'{str(screen_width)}x{str(screen_height)}')
 history_list = []
 chosen_op = []
 result = []
+#attributes = [width, height]
+op_btn_attr = [8,3]
 def plus_op():
     try:
         choose_operation("+")
@@ -14,7 +16,6 @@ def plus_op():
         num2 = float(num2_entry.get().strip())
         result.clear()
         result.append(str(num1 + num2))
-        add_to_history(result, num1, num2, "+")
         plus_button.config(state=tk.DISABLED, relief=tk.SUNKEN)
     except ValueError:
         warning_label.config(text="Error: Please enter a number", font=("Arial", 20, "bold"), fg='red')
@@ -26,7 +27,6 @@ def minus_op():
         num2 = float(num2_entry.get().strip())
         result.clear()
         result.append(str(num1 - num2))
-        add_to_history(result, num1, num2, "-")
         minus_button.config(state=tk.DISABLED, relief=tk.SUNKEN)
     except ValueError:
         warning_label.config(text="Error: Please enter a number", font=("Arial", 20, "bold"), fg='red')
@@ -38,7 +38,6 @@ def multi_op():
         num2 = float(num2_entry.get().strip())
         result.clear()
         result.append(str(num1 * num2))
-        add_to_history(result, num1, num2, "*")
         multi_button.config(state=tk.DISABLED, relief=tk.SUNKEN)
     except ValueError:
         warning_label.config(text="Error: Please enter a number", font=("Arial", 20, "bold"), fg='red')
@@ -53,7 +52,6 @@ def divide_op():
         else:
             result.clear()
             result.append(str(round((num1 / num2),5)))
-            add_to_history(result, num1, num2, "/")
             divide_button.config(state=tk.DISABLED, relief=tk.SUNKEN)
     except ValueError:
         warning_label.config(text="Error: Please enter a number", font=("Arial", 20, "bold"), fg='red')
@@ -68,7 +66,6 @@ def quotient_divide_op():
         else:
             result.clear()
             result.append(str(num1 // num2))
-            add_to_history(result, num1, num2, "//")
             quotient_divide_button.config(state=tk.DISABLED, relief=tk.SUNKEN)
     except ValueError:
         warning_label.config(text="Error: Please enter a number", font=("Arial", 20, "bold"), fg='red')
@@ -83,7 +80,6 @@ def remainder_divide_op():
         else:
             result.clear()
             result.append(str(num1 % num2))
-            add_to_history(result, num1, num2, "%")
             remainder_button.config(state=tk.DISABLED, relief=tk.SUNKEN)
     except ValueError:
         warning_label.config(text="Error: Please enter a number", font=("Arial", 20, "bold"), fg='red')
@@ -95,7 +91,6 @@ def power_op():
         num2 = float(num2_entry.get().strip())
         result.clear()
         result.append(str(num1 ** num2))
-        add_to_history(result, num1, num2, "^")
         power_button.config(state=tk.DISABLED, relief=tk.SUNKEN)
     except ValueError:
         warning_label.config(text="Error: Please enter a number", font=("Arial", 20, "bold"), fg='red')
@@ -134,8 +129,11 @@ def choose_operation(operation):
         chosen_op.append(operation)
 
 def calculate(event):
+    num1 = num1_entry.get().strip()
+    num2 = num2_entry.get().strip()
     result_label.config(text=result[0])
     result_label.pack(padx=5, side=tk.RIGHT)
+    add_to_history(result, num1, num2, chosen_op[0])
     change_operation()
 
 def change_operation():
@@ -192,28 +190,28 @@ result_text_label.pack(padx=5, side=tk.LEFT)
 
 result_label = tk.Label(result_frame, text="", font=("Arial", 20, "bold"))
 
-plus_button = tk.Button(operation_button_frame, width=5, text="+", command=plus_op)
+plus_button = tk.Button(operation_button_frame, width=op_btn_attr[0], height=op_btn_attr[1], text="+", command=plus_op)
 plus_button.pack(padx=5, side=tk.LEFT)
 
-minus_button = tk.Button(operation_button_frame, width=5, text="-", command=minus_op)
+minus_button = tk.Button(operation_button_frame, width=op_btn_attr[0], height=op_btn_attr[1], text="-", command=minus_op)
 minus_button.pack(padx=5, side=tk.LEFT)
 
-multi_button = tk.Button(operation_button_frame, width=5, text="*", command=multi_op)
+multi_button = tk.Button(operation_button_frame, width=op_btn_attr[0], height=op_btn_attr[1], text="*", command=multi_op)
 multi_button.pack(padx=5, side=tk.LEFT)
 
-divide_button = tk.Button(operation_button_frame, width=5, text="/", command=divide_op)
+divide_button = tk.Button(operation_button_frame, width=op_btn_attr[0], height=op_btn_attr[1], text="/", command=divide_op)
 divide_button.pack(padx=5, side=tk.LEFT)
 
-quotient_divide_button = tk.Button(operation_button_frame, width=5, text="//", command=quotient_divide_op)
+quotient_divide_button = tk.Button(operation_button_frame, width=op_btn_attr[0], height=op_btn_attr[1], text="//", command=quotient_divide_op)
 quotient_divide_button.pack(padx=5, side=tk.LEFT)
 
-remainder_button = tk.Button(operation_button_frame, width=5, text="%", command=remainder_divide_op)
+remainder_button = tk.Button(operation_button_frame, width=op_btn_attr[0], height=op_btn_attr[1], text="%", command=remainder_divide_op)
 remainder_button.pack(padx=5, side=tk.LEFT)
 
-power_button = tk.Button(operation_button_frame, width=5, text="^", command=power_op)
+power_button = tk.Button(operation_button_frame, width=op_btn_attr[0], height=op_btn_attr[1], text="^", command=power_op)
 power_button.pack(padx=5, side=tk.LEFT)
 
-clear_button = tk.Button(action_button_frame, width=5, text="C", command=clear_nums)
+clear_button = tk.Button(action_button_frame, width=8, height=3, text="C", command=clear_nums)
 clear_button.pack(padx=5, side=tk.LEFT)
 
 warning_label = tk.Label(root, text='')
