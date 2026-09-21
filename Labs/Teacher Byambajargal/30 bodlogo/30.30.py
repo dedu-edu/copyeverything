@@ -1,0 +1,8 @@
+x = str(101011)
+z = str(11000)
+q = int(x, 2)
+w = int(z, 2)
+print(q+w,q-w,q*w)
+print(bin(67))
+print(bin(19))
+print(bin(1032))

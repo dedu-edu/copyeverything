@@ -1,0 +1,14 @@
+grade = int(input("please enter your score? "))
+if 0<=grade<=100:
+    if 90<=grade<=100:
+        print("A")
+    elif 80<=grade<=89:
+        print("B")
+    elif 70<=grade<=79:
+        print("C")
+    elif 60<=grade<=69:
+        print("D")
+    else:
+        print("F")
+else:
+    print("invalid score.Min is 0, Max is 100")

@@ -1,0 +1,9 @@
+n = int(input("enter the size of the array: "))
+number = []
+for i in range(n):
+    num = int(input(f"enter your {i+1}th number: "))
+    number.append(num)
+tmp = number[-1]
+number[-1] = number[0]
+number[0] = tmp
+print(number)

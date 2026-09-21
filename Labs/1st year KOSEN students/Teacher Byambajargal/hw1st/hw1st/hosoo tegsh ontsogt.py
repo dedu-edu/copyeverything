@@ -1,0 +1,17 @@
+import turtle as nigger
+nigger
+nigger.pencolor("brown")
+nigger.fillcolor("yellow")
+nigger.begin_fill()
+nigger.pensize(10)
+nigger.forward(500)
+nigger.right(90)
+nigger.pencolor("green")
+nigger.forward(300)
+nigger.right(90)
+nigger.pencolor("pink")
+nigger.forward(500)
+nigger.right(90)
+nigger.pencolor("black")
+nigger.forward(300)
+nigger.end_fill()
