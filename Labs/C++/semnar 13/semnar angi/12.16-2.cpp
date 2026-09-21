@@ -1,0 +1,17 @@
+#include <iostream>
+#include <fstream>
+using namespace std;
+int main()
+{
+    ofstream myFile("name.txt");
+    myFile<<"my name William James Moriarty\n";
+    myFile.close();
+    string myText;
+    ifstream myreadfile("name.txt");
+    while (getline(myreadfile,myText))
+    {
+        cout << myText << endl;
+    }
+    myreadfile.close();
+    return 0;
+}

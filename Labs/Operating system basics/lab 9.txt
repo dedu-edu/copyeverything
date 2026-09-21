@@ -1,0 +1,19 @@
+#!/bin/bash
+mkdir -p lab09
+SEARCH_URL="https://www.google.com/search?q=programming"
+curl -s "$SEARCH_URL" \
+| grep -oP '(?<=/url\?q=)[^&]+' \
+| grep '^http' \
+| head -n 5 \
+| while read url; do
+    html=$(curl -Ls "$url")
+    title=$(echo "$html" \
+        | grep -i "<title>" \
+        | sed -n 's/.*<title>\(.*\)<\/title>.*/\1/p' \
+        | head -n 1)
+    safe_title=$(echo "$title" | sed 's/[^a-zA-Z0-9._-]/_/g')
+    echo "$html" > "lab09/${safe_title}.html"
+
+    echo "Saved: lab09/${safe_title}.html"
+
+done
