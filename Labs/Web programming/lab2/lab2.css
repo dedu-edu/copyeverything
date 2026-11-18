@@ -1,0 +1,103 @@
+body {
+    margin: 0 ;
+    font-family: Arial, sans-serif;
+    color: #444444;
+    background-color: #ffffff;
+  }
+  
+  header {
+    background-color: #1f3864;
+    padding: 25px 45px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .logo {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  div a {
+    color: white;
+    text-decoration: none;
+    margin-left: 30px;
+  }
+
+  .hero {
+    text-align: center;
+    padding: 110px 20px 70px 20px;
+  }
+  
+  .hero h1 {
+    color: #1f3864;
+    font-size: 42px;
+    margin-bottom: 20px;
+  }
+  
+  .hero p {
+    font-size: 18px;
+    margin-bottom: 35px;
+  }
+  
+  .button {
+    background-color: #f5b400;
+    color: #1f3864;
+    font-weight: bold;
+    padding: 18px 34px;
+    border-radius: 8px;
+  }
+  
+  .cards {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    padding: 40px 20px 85px 20px;
+  }
+  
+  .card {
+    background-color: #a7b9de;
+    width: 300px;
+    padding: 25px;
+    border-radius: 14px;
+  }
+  
+  .icon {
+    width: 47px;
+    height: 47px;
+    background-color: #2f5496;
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .card h3 {
+    color: #2f5496;
+    font-size: 22px;
+    margin: 0 0 12px 0;
+  }
+  
+  .card p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  
+  footer {
+    background-color: #4b6288;
+    color: white;
+    text-align: center;
+    padding: 25px;
+    font-size: 15px;
+  }
+  
+  footer p {
+    margin: 0;
+  }
+  
+  @media (max-width: 800px) {
+    .cards {
+      flex-direction: column;
+      align-items: center;
+    }
+  }

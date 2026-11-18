@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="mn">
+  <head>
+    <title>Бүртгэлийн маягт</title>
+    <link rel="stylesheet" href="lab3.css" />
+  </head>
+  <body>
+    <h1>Бүртгэлийн маягт</h1>
+
+    <form>
+      <fieldset>
+        <legend>Хувийн мэдээлэл</legend>
+
+        <label for="name">Нэр</label>
+        <input type="text" id="name" />
+
+        <label for="email">И-мэйл</label>
+        <input type="email" id="email" />
+
+        <label for="password">Нууц үг</label>
+        <input type="password" id="password" />
+
+        <label for="phone">Утас</label>
+        <input type="text" id="phone" placeholder="99112233" />
+
+        <label for="age">Нас</label>
+        <input type="number" id="age" />
+
+        <label for="birthday">Төрсөн өдөр</label>
+        <input type="date" id="birthday" />
+
+        <label>Хүйс:</label>
+        <div class="radio-row">
+          <input type="radio" name="gender" id="male" />
+          <label for="male">Эр</label>
+        </div>
+        <div class="radio-row">
+          <input type="radio" name="gender" id="female" />
+          <label for="female">Эм</label>
+        </div>
+
+        <label for="country">Улс</label>
+        <select id="country">
+          <option>Монгол</option>
+          <option>Япон</option>
+          <option>Солонгос</option>
+          <option>Хятад</option>
+        </select>
+      </fieldset>
+
+      <fieldset>
+        <legend>Холбоо барих</legend>
+
+        <label for="about">Товч танилцуулга</label>
+        <textarea id="about"></textarea>
+
+        <div class="check-row">
+          <input type="checkbox" id="agree" />
+          <label for="agree">Мэдээллээ зөв бөглөсөн</label>
+        </div>
+
+        <button type="submit">Бүртгүүлэх</button>
+      </fieldset>
+    </form>
+  </body>
+</html>
+"

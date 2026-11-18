@@ -1,0 +1,82 @@
+body {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #f4f6fa;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  
+  h1 {
+    color: #1f3864;
+    font-size: 32px;
+    margin-bottom: 15px;
+  }
+  
+  fieldset {
+    background-color: white;
+    border: 1px solid #c8d0e0;
+    border-radius: 12px;
+    padding: 10px 16px 16px 16px;
+    margin-bottom: 25px;
+  }
+  
+  legend {
+    color: #2f5496;
+    font-weight: bold;
+    padding: 0 10px;
+  }
+  
+  label {
+    display: block;
+    font-weight: bold;
+    font-size: 14px;
+    margin-top: 12px;
+    margin-bottom: 6px;
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  select,
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    font-size: 15px;
+    border: 1px solid #c8d0e0;
+    border-radius: 8px;
+  }
+  
+  textarea {
+    height: 70px;
+  }
+  
+  .radio-row,
+  .check-row {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+  }
+  
+  .radio-row label,
+  .check-row label {
+    margin: 0 0 0 8px;
+  }
+  
+  .check-row {
+    margin-top: 15px;
+  }
+
+  button {
+    background-color: #1f3864;
+    color: white;
+    font-weight: bold;
+    font-size: 15px;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    margin-top: 15px;
+    cursor: pointer;
+  }
