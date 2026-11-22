@@ -1,0 +1,36 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Project-3 Review Carousel</title>
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    </head>
+
+    <body class="bg-gray-100">
+        <h1 class="flex justify-center text-blue-600 text-5xl font-extrabold mt-10">
+            Our Reviews
+        </h1>
+        <div class="bg-white shadow-xl rounded-xl mx-auto mt-10 p-10 w-3/4 text-center">
+            <img id="image" class="w-40 h-40 object-cover rounded-full mx-auto mb-5">
+            <h2 id="name" class="text-3xl font-bold">John</h2>
+            <p id="job" class="text-blue-500 mt-2">Student</p>
+            <p id="review" class="mt-5 text-gray-600">
+                This website is very helpful and easy to use!
+            </p>
+            <div class="mt-8">
+                <button id="previous" class="border-2 border-blue-500 text-blue-500 px-5 py-2 rounded-lg mx-2 hover:bg-blue-500 hover:text-white">
+                    Previous
+                </button>
+                <button id="next" class="border-2 border-blue-500 text-blue-500 px-5 py-2 rounded-lg mx-2 hover:bg-blue-500 hover:text-white">
+                    Next
+                </button>
+            </div>
+            <button id="random" class="mt-5 bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-700">
+                Surprise Me
+            </button>
+        </div>
+        <script src="script.js"></script>
+    </body>
+</html>
